@@ -5,14 +5,14 @@ from gpiozero import Button
 
 class Log:
     def __init__(self):
-        self.buffer_length = 5000
-        self.a_points = [[], []]
-        for i in range(self.buffer_length):
+        self.buffer_length = 5000  # Number of data points stored
+        self.a_points = [[], []]  # Sets of data points for each sensor
+        for i in range(self.buffer_length):  #
             self.a_points[0].append([0, 0])
             self.a_points[1].append([0, 0])
         self.a_i = [0, 0]
         self.events = []
-        self.a_offsets = [1450, 1450]
+        self.a_offsets = [1430, 1430]
         self.a_cal = [0, 0]
 
     def i_wrap(self, i):
@@ -36,7 +36,7 @@ class Log:
             d_sum = 0
             for c in range(width):
                 d_sum += self.a_points[sig_id][self.i_convert(i + c - width + 1, self.a_i[sig_id])][0]
-            t_avg = d_sum/4
+            t_avg = int(d_sum/width)
             out.append([t_avg, self.a_points[sig_id][self.i_convert(i, self.a_i[sig_id])][1]])
         return out
 
@@ -45,12 +45,12 @@ class Log:
         self.a_points[sig_id][self.a_i[sig_id]] = a
         self.a_i[sig_id] = self.i_wrap(self.a_i[sig_id])
 
-    def save_event(self):
+    def save_event(self):  # Formats the raw sensor data lpf -> offset -> calibration -> adjust timestamps to start at 0
         a0 = self.lpf(0, 4)
-        a1 = self.lpf(1, 4)
-        for i in range(len(a1)):
-            a1[i][0] = a1[i][0] - self.a_offsets[1]
+        a1 = self.lpf(1, 10)
         for i in range(len(a0)):
+            a0[i][0] = a0[i][0] - self.a_offsets[0]
+        for i in range(len(a1)):
             a1[i][0] = a1[i][0] - self.a_offsets[1]
         self.events.append([a0, a1])
 
@@ -88,5 +88,9 @@ if __name__ == '__main__':
             f.write('\n')
     with open('proc_out.txt', 'w') as f:
         for point in log.events[0][0]:
+            f.write(str(point[0]))
+            f.write('\n')
+    with open('proc_out1.txt', 'w') as f:
+        for point in log.events[0][1]:
             f.write(str(point[0]))
             f.write('\n')
