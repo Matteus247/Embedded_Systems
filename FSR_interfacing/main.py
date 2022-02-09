@@ -25,8 +25,8 @@ class Log:
         if i_relative < 0:  # Useful when applying lpf to not wrap the filter
             return i_current
         i = i_current + i_relative
-        if i > 4999:
-            return i - 5000
+        if i > self.buffer_length - 1:
+            return i - self.buffer_length
         else:
             return i
 
@@ -40,7 +40,7 @@ class Log:
             out.append([t_avg, self.a_points[sig_id][self.i_convert(i, self.a_i[sig_id])][1]])
         return out
 
-    def write(self, sig_id, d):
+    def write(self, sig_id, d):  # Write a datapoint into a buffer and timestamp it
         a = [d, time.process_time()]
         self.a_points[sig_id][self.a_i[sig_id]] = a
         self.a_i[sig_id] = self.i_wrap(self.a_i[sig_id])
@@ -48,10 +48,14 @@ class Log:
     def save_event(self):  # Formats the raw sensor data lpf -> offset -> calibration -> adjust timestamps to start at 0
         a0 = self.lpf(0, 4)
         a1 = self.lpf(1, 10)
+        t_off0 = a0[0][1]
+        t_off1 = a1[0][1]
         for i in range(len(a0)):
             a0[i][0] = a0[i][0] - self.a_offsets[0]
+            a0[i][1] = a0[i][1] - t_off0  # Set the time of the event to start from 0
         for i in range(len(a1)):
             a1[i][0] = a1[i][0] - self.a_offsets[1]
+            a1[i][1] = a1[i][1] - t_off1
         self.events.append([a0, a1])
 
 
@@ -88,9 +92,9 @@ if __name__ == '__main__':
             f.write('\n')
     with open('proc_out.txt', 'w') as f:
         for point in log.events[0][0]:
-            f.write(str(point[0]))
+            f.write(str(point[0]) + ", " + str(point[1]))
             f.write('\n')
     with open('proc_out1.txt', 'w') as f:
         for point in log.events[0][1]:
-            f.write(str(point[0]))
+            f.write(str(point[0]) + ", " + str(point[1]))
             f.write('\n')
