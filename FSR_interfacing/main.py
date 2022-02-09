@@ -1,5 +1,6 @@
 import smbus2
 import time
+import json
 from gpiozero import Button
 
 
@@ -12,6 +13,7 @@ class Log:
             self.a_points[1].append([0, 0])
         self.a_i = [0, 0]
         self.events = []
+        self.event_i = 0  # Index of next event to be sent via MQTT
         self.a_offsets = [1430, 1430]
         self.a_cal = [0, 0]
 
@@ -41,8 +43,7 @@ class Log:
         return out
 
     def write(self, sig_id, d):  # Write a datapoint into a buffer and timestamp it
-        a = [d, time.process_time()]
-        self.a_points[sig_id][self.a_i[sig_id]] = a
+        self.a_points[sig_id][self.a_i[sig_id]] = [d, time.process_time()]
         self.a_i[sig_id] = self.i_wrap(self.a_i[sig_id])
 
     def save_event(self):  # Formats the raw sensor data lpf -> offset -> calibration -> adjust timestamps to start at 0
@@ -52,10 +53,10 @@ class Log:
         t_off1 = a1[0][1]
         for i in range(len(a0)):
             a0[i][0] = a0[i][0] - self.a_offsets[0]
-            a0[i][1] = a0[i][1] - t_off0  # Set the time of the event to start from 0
+            a0[i][1] = round(a0[i][1] - t_off0, 4)  # Set the time of the event to start from 0
         for i in range(len(a1)):
             a1[i][0] = a1[i][0] - self.a_offsets[1]
-            a1[i][1] = a1[i][1] - t_off1
+            a1[i][1] = round(a1[i][1] - t_off1, 4)
         self.events.append([a0, a1])
 
 
@@ -67,6 +68,8 @@ alert0 = Button(10)  # Alert pin is active low
 alert1 = Button(17)
 
 t0 = time.process_time()
+
+dicMes = {}
 
 if __name__ == '__main__':
     with smbus2.SMBus(1) as bus:
@@ -98,3 +101,16 @@ if __name__ == '__main__':
         for point in log.events[0][1]:
             f.write(str(point[0]) + ", " + str(point[1]))
             f.write('\n')
+
+    # data = [0, log.events[0][0], log.events[0][1]]
+    # son_object = json.dumps(data)
+    # print(json_object)
+    print("version2")
+    sensorReading = {
+        "eventId": 0,
+        "signalOne": log.events[0][0],
+        "signalTwo": log.events[0][1]
+    }
+
+    json_object = json.dumps(sensorReading)
+    print(json_object)
