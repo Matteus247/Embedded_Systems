@@ -113,4 +113,4 @@ if __name__ == '__main__':
     }
 
     json_object = json.dumps(sensorReading)
-    print(json_object)
+    print(json_object)  # nice
