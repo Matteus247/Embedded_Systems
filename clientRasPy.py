@@ -26,7 +26,7 @@ client.on_publish = on_publish
 #client.tls_set(ca_certs="mosquitto.org.crt", certfile="client.crt", keyfile="client.key")
 
 # Connect to port 8884 in order to make a secure connection 8884
-client.connect("192.168.1.100",port=1883)
+client.connect("129.31.162.182", port=1883)
 
 #subscribe to that topic
 client.subscribe("IC.embedded/GROUP_NAME/#")

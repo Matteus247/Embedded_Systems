@@ -1,6 +1,7 @@
 import smbus2
 import time
 import json
+import paho.mqtt.client as mqtt
 from gpiozero import Button
 
 
@@ -75,7 +76,7 @@ if __name__ == '__main__':
     with smbus2.SMBus(1) as bus:
         bus.write_i2c_block_data(0x48, 0x01, config_block)
         bus.write_i2c_block_data(0x49, 0x01, config_block)
-        while (time.process_time() - t0) < 10:
+        while (time.process_time() - t0) < 6:
             if not alert0.is_held:
                 acc = bus.read_i2c_block_data(0x48, 0x00, 2)
                 log.write(0, acc[0] * 128 + acc[1])
@@ -106,11 +107,22 @@ if __name__ == '__main__':
     # son_object = json.dumps(data)
     # print(json_object)
     print("version2")
+    d_values = []
+    t_values = []
+    for p in log.events[0][0]:
+        d_values.append(p[0])
+        t_values.append(p[1])
+
     sensorReading = {
         "eventId": 0,
-        "signalOne": log.events[0][0],
-        "signalTwo": log.events[0][1]
+        "signalOne_d": d_values,
+        "signalOne_t": t_values
     }
 
     json_object = json.dumps(sensorReading)
-    print(json_object)  # nice
+    # print(json_object)  # nice
+
+    client = mqtt.Client()
+    print(client.connect("129.31.162.182", port=1883))
+    MSG_INFO = client.publish("IC.embedded/skate_comp/test", json_object)
+    print(mqtt.error_string(MSG_INFO.rc))
