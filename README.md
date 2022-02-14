@@ -1,4 +1,4 @@
-Axel-erate
+Axel-erated Skating
 ===
 #### An IoT device for Embedded Systems ELEC60013
 

@@ -6,7 +6,7 @@ import time
 
 class Log:
     def __init__(self):
-        self.buffer_length = 5000  # Number of data points stored
+        self.buffer_length = 2500  # Number of data points stored
         self.buffers = [[[], []], [[], []]]  # data for each sensor [[[data, ...],[time, ...]], ...]
         for i in range(self.buffer_length):  #
             self.buffers[0][0].append(0)
@@ -40,9 +40,6 @@ class Log:
             d_sum += self.buffers[sig_id][0][self.i_convert(index + c - width + 1, self.buffer_i[sig_id])]
         return int(d_sum / width)
 
-    def rolling_lpf(self, sig_id, width):
-        return 0
-
     def lpf_buffer(self, sig_id, width):  # Time averaging of defined width, entire buffer
         filtered_buffer = [[], []]
         for i in range(self.buffer_length):
@@ -58,12 +55,11 @@ class Log:
     def save_event(self):  # Formats the raw sensor data lpf -> offset -> calibration -> adjust timestamps to start at 0
         print("saving event")
         a0 = self.lpf_buffer(0, 5)
-        #print(a0)
         a1 = self.lpf_buffer(1, 10)
         t_off0 = a0[1][self.buffer_length - 1]
-        t_off1 = a1[1][0]
+        t_off1 = a1[1][self.buffer_length - 1]
         for i in range(self.buffer_length):
-            a0[0][i] = a0[0][i] - self.sig_offsets[0]
+            a0[0][i] = round((a0[0][i] - self.sig_offsets[0])/self.sig_cal[0] * 0.25, 4)
             a0[1][i] = round(a0[1][i] - t_off0, 4)  # Set the time of the event to start from 0
         for i in range(self.buffer_length):
             a1[0][1] = a1[0][i] - self.sig_offsets[1]

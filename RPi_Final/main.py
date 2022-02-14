@@ -21,7 +21,7 @@ green_led = LED(22)
 
 
 def readFsrAdcs():
-    while (time.process_time() - t0 < 20):
+    while (time.process_time() - t0 < 30):
         if not adc0.alert.is_held:
             log.write(0, adc0.read_conversion())
         if not adc1.alert.is_held:
@@ -33,19 +33,41 @@ def eventLogging():
     green_led.off()
     cal_button.wait_for_active()
     red_led.blink(0.1, 0.1)
-    green_led.on()
+    time.sleep(0.2)  # Do calibration here
 
-    time.sleep(15)
+    t_err = time.perf_counter()  # Tracks last time a signal moved by more than 10%
+    fsr_0 = 0
+    fsr_1 = 0
+    while time.perf_counter() - t_err < 3:  # Wait for signal to remain within +-10% band for 1 second
+        fsr_0pp = log.lpf(0, 0, 20)
+        fsr_1pp = log.lpf(1, 0, 40)
+        if fsr_0pp > fsr_0*1.1 or fsr_0pp < fsr_0*0.9:
+            t_err = time.perf_counter()
+        elif fsr_1pp > fsr_1*1.1 or fsr_1pp < fsr_1*0.9:
+            t_err = time.perf_counter()
+        fsr_0 = fsr_0pp
+        fsr_1 = fsr_1pp
+    log.sig_cal[0] = fsr_0 - log.sig_offsets[0]
+    log.sig_cal[1] = fsr_1 - log.sig_offsets[1]
+    print("Cals: ", fsr_0, " ", fsr_1)
+    red_led.off()
+
+    # cal_button.wait_for_active()
+    time.sleep(10)
+    green_led.blink(0.1, 0.1)
+    time.sleep(5)
+    green_led.on()
     log.save_event()
 
     with open('proc_out.txt', 'w') as f:
-        for i in range(5000):
+        for i in range(2500):
             f.write(str(log.events[0][0][0][i]) + ", " + str(log.events[0][0][1][i]))
             f.write('\n')
 
+
 if __name__ == '__main__':
     threads = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+    with concurrent.futures.ThreadPoolExecutor() as executor:
         print("Start threads")
         threads.append(executor.submit(readFsrAdcs))
         threads.append(executor.submit(eventLogging))
