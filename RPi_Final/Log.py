@@ -16,8 +16,12 @@ class Log:
         self.buffer_i = [0, 0]
         self.events = []
         self.event_i = 0  # Index of next event to be sent via MQTT
-        self.sig_offsets = [1430, 1430]  # Removes DC offset read at the ADC
+        self.sig_offsets = [1800, 1800]  # Removes DC offset read at the ADC
         self.sig_cal = [0, 0]  # Based upon the user's resting, balanced weight
+
+        #  Timing data
+        self.t_previous = time.perf_counter()
+        self.t_cumulative = 0
 
     def i_wrap(self, i):
         if i < (self.buffer_length - 1):
@@ -49,19 +53,26 @@ class Log:
 
     def write(self, sig_id, d):  # Write a datapoint into a buffer and timestamp it
         self.buffers[sig_id][0][self.buffer_i[sig_id]] = d
-        self.buffers[sig_id][1][self.buffer_i[sig_id]] = time.process_time()
+
+        t = time.perf_counter()
+        self.t_cumulative += t - self.t_previous
+        self.t_previous = t
+
+        self.buffers[sig_id][1][self.buffer_i[sig_id]] = self.t_cumulative
         self.buffer_i[sig_id] = self.i_wrap(self.buffer_i[sig_id])  # Increment buffer index
 
     def save_event(self):  # Formats the raw sensor data lpf -> offset -> calibration -> adjust timestamps to start at 0
         print("saving event")
-        a0 = self.lpf_buffer(0, 5)
+        a0 = self.lpf_buffer(0, 10)
         a1 = self.lpf_buffer(1, 10)
+        print(a1)
         t_off0 = a0[1][self.buffer_length - 1]
         t_off1 = a1[1][self.buffer_length - 1]
         for i in range(self.buffer_length):
             a0[0][i] = round((a0[0][i] - self.sig_offsets[0])/self.sig_cal[0] * 0.25, 4)
             a0[1][i] = round(a0[1][i] - t_off0, 4)  # Set the time of the event to start from 0
         for i in range(self.buffer_length):
-            a1[0][1] = a1[0][i] - self.sig_offsets[1]
+            a1[0][i] = round((a1[0][i] - self.sig_offsets[1])/self.sig_cal[1] * 0.25, 4)
             a1[1][i] = round(a1[1][i] - t_off1, 4)
+        print(a1)
         self.events.append([a0, a1])

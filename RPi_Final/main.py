@@ -39,8 +39,8 @@ def eventLogging():
     fsr_0 = 0
     fsr_1 = 0
     while time.perf_counter() - t_err < 3:  # Wait for signal to remain within +-10% band for 1 second
-        fsr_0pp = log.lpf(0, 0, 20)
-        fsr_1pp = log.lpf(1, 0, 40)
+        fsr_0pp = log.lpf(0, 0, 15)
+        fsr_1pp = log.lpf(1, 0, 25)
         if fsr_0pp > fsr_0*1.1 or fsr_0pp < fsr_0*0.9:
             t_err = time.perf_counter()
         elif fsr_1pp > fsr_1*1.1 or fsr_1pp < fsr_1*0.9:
@@ -52,7 +52,7 @@ def eventLogging():
     print("Cals: ", fsr_0, " ", fsr_1)
     red_led.off()
 
-    # cal_button.wait_for_active()
+    #cal_button.wait_for_active()
     time.sleep(10)
     green_led.blink(0.1, 0.1)
     time.sleep(5)
@@ -62,6 +62,12 @@ def eventLogging():
     with open('proc_out.txt', 'w') as f:
         for i in range(2500):
             f.write(str(log.events[0][0][0][i]) + ", " + str(log.events[0][0][1][i]))
+            f.write('\n')
+
+    print(log.events[0][1][0][i])
+    with open('proc_out1.txt', 'w') as f:
+        for i in range(2500):
+            f.write(str(log.events[0][1][0][i]) + ", " + str(log.events[0][1][1][i]))
             f.write('\n')
 
 
