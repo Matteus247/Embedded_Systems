@@ -13,7 +13,7 @@ log = Log()
 adc0 = FsrAdc(0x48, 10)
 adc1 = FsrAdc(0x49, 17)
 
-t0 = time.process_time()
+t0 = time.perf_counter()
 
 cal_button = Button(27)
 red_led = LED(23)
@@ -21,11 +21,15 @@ green_led = LED(22)
 
 
 def readFsrAdcs():
-    while (time.process_time() - t0 < 30):
+    while (time.perf_counter() - t0 < 30):
         if not adc0.alert.is_held:
             log.write(0, adc0.read_conversion())
         if not adc1.alert.is_held:
             log.write(1, adc1.read_conversion())
+
+def readGyro():
+    while (time.perf_counter() - t0 < 30):
+        time.sleep(0.01)
 
 
 def eventLogging():

@@ -7,13 +7,14 @@ import time
 class Log:
     def __init__(self):
         self.buffer_length = 2500  # Number of data points stored
-        self.buffers = [[[], []], [[], []]]  # data for each sensor [[[data, ...],[time, ...]], ...]
-        for i in range(self.buffer_length):  #
-            self.buffers[0][0].append(0)
-            self.buffers[0][1].append(0)
-            self.buffers[1][0].append(0)
-            self.buffers[1][1].append(0)
-        self.buffer_i = [0, 0]
+        self.buffers = [[[], []], [[], []], [[], []]]  # data for each sensor [[[data, ...],[time, ...]], ...]
+
+        for buffer in range(len(self.buffers)):
+            for i in range(self.buffer_length):  #
+                self.buffers[buffer][0].append(0)
+                self.buffers[buffer][1].append(0)
+
+        self.buffer_i = [0, 0, 0]
         self.events = []
         self.event_i = 0  # Index of next event to be sent via MQTT
         self.sig_offsets = [1800, 1800]  # Removes DC offset read at the ADC
@@ -58,21 +59,23 @@ class Log:
         self.t_cumulative += t - self.t_previous
         self.t_previous = t
 
-        self.buffers[sig_id][1][self.buffer_i[sig_id]] = self.t_cumulative
+        self.buffers[sig_id][1][self.buffer_i[sig_id]] = time.time()
         self.buffer_i[sig_id] = self.i_wrap(self.buffer_i[sig_id])  # Increment buffer index
 
     def save_event(self):  # Formats the raw sensor data lpf -> offset -> calibration -> adjust timestamps to start at 0
         print("saving event")
         a0 = self.lpf_buffer(0, 10)
         a1 = self.lpf_buffer(1, 10)
-        print(a1)
-        t_off0 = a0[1][self.buffer_length - 1]
-        t_off1 = a1[1][self.buffer_length - 1]
+        g0 = self.lpf_buffer(2, 1)
+        #t_off0 = a0[1][self.buffer_length - 1]
+        #t_off1 = a1[1][self.buffer_length - 1]
+        #t_off2 = g0[1][self.buffer_length - 1]
         for i in range(self.buffer_length):
             a0[0][i] = round((a0[0][i] - self.sig_offsets[0])/self.sig_cal[0] * 0.25, 4)
-            a0[1][i] = round(a0[1][i] - t_off0, 4)  # Set the time of the event to start from 0
+            #a0[1][i] = round(a0[1][i] - t_off0, 4)  # Set the time of the event to start from 0
         for i in range(self.buffer_length):
             a1[0][i] = round((a1[0][i] - self.sig_offsets[1])/self.sig_cal[1] * 0.25, 4)
-            a1[1][i] = round(a1[1][i] - t_off1, 4)
-        print(a1)
-        self.events.append([a0, a1])
+            #a1[1][i] = round(a1[1][i] - t_off1, 4)
+        #for i in range(self.buffer_length):
+        #    g0[1][i] = round(a1[1][i] - t_off2, 4)
+        self.events.append([a0, a1, g0])
