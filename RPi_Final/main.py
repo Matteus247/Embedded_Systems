@@ -4,12 +4,14 @@ import json
 import paho.mqtt.client as mqtt
 from Log import Log
 from FsrAdc import FsrAdc
+from Gyro import Gyro
 import concurrent.futures
 from gpiozero import Button
 from gpiozero import LED
 
 log = Log()
 
+gyro0 = Gyro()
 adc0 = FsrAdc(0x48, 10)
 adc1 = FsrAdc(0x49, 17)
 
@@ -27,8 +29,13 @@ def readFsrAdcs():
         if not adc1.alert.is_held:
             log.write(1, adc1.read_conversion())
 
+
 def readGyro():
     while (time.perf_counter() - t0 < 30):
+        gyro0.getAllAxes(True)
+        out = gyro0.getResultantSpeed()
+        log.write(2, out)
+        print(out)
         time.sleep(0.01)
 
 
@@ -68,10 +75,14 @@ def eventLogging():
             f.write(str(log.events[0][0][0][i]) + ", " + str(log.events[0][0][1][i]))
             f.write('\n')
 
-    print(log.events[0][1][0][i])
     with open('proc_out1.txt', 'w') as f:
         for i in range(2500):
             f.write(str(log.events[0][1][0][i]) + ", " + str(log.events[0][1][1][i]))
+            f.write('\n')
+
+    with open('proc_out2.txt', 'w') as f:
+        for i in range(2500):
+            f.write(str(log.events[0][2][0][i]) + ", " + str(log.events[0][2][1][i]))
             f.write('\n')
 
 
@@ -81,4 +92,5 @@ if __name__ == '__main__':
         print("Start threads")
         threads.append(executor.submit(readFsrAdcs))
         threads.append(executor.submit(eventLogging))
+        threads.append(executor.submit(readGyro))
     print("End threads")

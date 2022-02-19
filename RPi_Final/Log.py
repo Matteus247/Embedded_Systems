@@ -43,7 +43,7 @@ class Log:
         d_sum = 0
         for c in range(width):
             d_sum += self.buffers[sig_id][0][self.i_convert(index + c - width + 1, self.buffer_i[sig_id])]
-        return int(d_sum / width)
+        return d_sum / width
 
     def lpf_buffer(self, sig_id, width):  # Time averaging of defined width, entire buffer
         filtered_buffer = [[], []]
@@ -66,7 +66,7 @@ class Log:
         print("saving event")
         a0 = self.lpf_buffer(0, 10)
         a1 = self.lpf_buffer(1, 10)
-        g0 = self.lpf_buffer(2, 1)
+        g0 = self.lpf_buffer(2, 3)
         #t_off0 = a0[1][self.buffer_length - 1]
         #t_off1 = a1[1][self.buffer_length - 1]
         #t_off2 = g0[1][self.buffer_length - 1]
