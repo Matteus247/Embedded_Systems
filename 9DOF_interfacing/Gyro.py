@@ -47,7 +47,7 @@ class Gyro:
             self.range = Gyro.RANGE_2000DPS
 
 
-    def getAllAxes(self):
+    def getAllAxes(self, filtered:bool):
         with smbus2.SMBus(1) as bus:
             
             buffer = bus.read_i2c_block_data(self.SLAVE_REG, self.STATUS_REG, 7)
@@ -66,6 +66,15 @@ class Gyro:
                 self.y = self.y - self.range
             if self.z > self.range / 2:
                 self.z = self.z - self.range
+            
+            ### Filter values, needed due to some unidentified jumps in readings ###
+            if self.filtered == True:
+                if abs(gyro_x) < 2:
+                    gyro_x = 0
+                if abs(gyro_y) < 2:
+                    gyro_y = 0
+                if abs(gyro_z) < 2:
+                    gyro_z = 0
             
             return round(self.x, 3), round(self.y, 3), round(self.z, 3)
 
