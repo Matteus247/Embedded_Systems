@@ -9,6 +9,8 @@ import concurrent.futures
 from gpiozero import Button
 from gpiozero import LED
 
+broker_ip = "129.31.162.182"
+
 log = Log()
 
 gyro0 = Gyro()
@@ -67,6 +69,26 @@ def eventLogging():
             green_led.on()
             log.save_event()
             print("writing event")
+
+            # Create and send JSON object
+
+            # MQTT_dict = {
+            #     "eventID": (log.event_i-1),
+            #     "heel_data": log.events[log.event_i-1][0][0],
+            #     "heel_time": log.events[log.event_i-1][0][1],
+            #     "toe_data": log.events[log.event_i-1][1][0],
+            #     "toe_time": log.events[log.event_i-1][1][1],
+            #     "spin_data": log.events[log.event_i-1][2][0],
+            #     "spin_time": log.events[log.event_i-1][2][1]
+            # }
+            #
+            # json_obj = json.dumps(MQTT_dict)
+            #
+            # client = mqtt.Client()
+            # print(client.connect(broker_ip, port=1883))
+            # MSG_INFO = client.publish("IC.embedded/skate_comp/test", json_obj)
+            # print(mqtt.error_string(MSG_INFO.rc))
+
             # Output adc0 data (heel sensor)
             with open('e%s_heel_d.txt' %log.event_i, 'w') as f:
                 print("first file opened")

@@ -48,9 +48,13 @@ class Log:
     def lpf_buffer(self, sig_id, width):  # Time averaging of defined width, entire buffer
         filtered_buffer = [[], []]
         for i in range(self.buffer_length):
-            filtered_buffer[0].append(self.lpf(sig_id, -i, width))
+            adjusted_width = width  # stop filter wrapping start and end of signal
+            if i < width:
+                adjusted_width = i + 1
+            print(adjusted_width)
+            filtered_buffer[0].append(self.lpf(sig_id, -i, adjusted_width))
             filtered_buffer[1].append(self.buffers[sig_id][1][self.i_convert(-i, self.buffer_i[sig_id] - 1)])
-        return filtered_buffer  # new buffer, arranged in time order
+        return filtered_buffer  # new buffer, arranged in reverse time order
 
     def write(self, sig_id, d):  # Write a datapoint into a buffer and timestamp it
         self.buffers[sig_id][0][self.buffer_i[sig_id]] = d
@@ -67,17 +71,10 @@ class Log:
         a0 = self.lpf_buffer(0, 10)
         a1 = self.lpf_buffer(1, 100)
         g0 = self.lpf_buffer(2, 3)
-        #t_off0 = a0[1][self.buffer_length - 1]
-        #t_off1 = a1[1][self.buffer_length - 1]
-        #t_off2 = g0[1][self.buffer_length - 1]
         for i in range(self.buffer_length):
             a0[0][i] = round((a0[0][i] - self.sig_offsets[0])/self.sig_cal[0] * 0.25, 4)
-            #a0[1][i] = round(a0[1][i] - t_off0, 4)  # Set the time of the event to start from 0
         for i in range(self.buffer_length):
             a1[0][i] = round((a1[0][i] - self.sig_offsets[1])/self.sig_cal[1] * 0.25, 4)
-            #a1[1][i] = round(a1[1][i] - t_off1, 4)
-        #for i in range(self.buffer_length):
-        #    g0[1][i] = round(a1[1][i] - t_off2, 4)
         self.events.append([a0, a1, g0])
         print("event appended")
         self.event_i += 1
