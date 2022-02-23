@@ -21,9 +21,8 @@ cal_button = Button(27)
 red_led = LED(23)
 green_led = LED(22)
 
-
 def readFsrAdcs():
-    while (time.perf_counter() - t0 < 30):
+    while True:
         if not adc0.alert.is_held:
             log.write(0, adc0.read_conversion())
         if not adc1.alert.is_held:
@@ -31,11 +30,10 @@ def readFsrAdcs():
 
 
 def readGyro():
-    while (time.perf_counter() - t0 < 30):
+    while True:
         gyro0.getAllAxes(True)
         out = gyro0.getResultantSpeed()
         log.write(2, out)
-        print(out)
         time.sleep(0.01)
 
 
@@ -63,27 +61,50 @@ def eventLogging():
     print("Cals: ", fsr_0, " ", fsr_1)
     red_led.off()
 
-    #cal_button.wait_for_active()
-    time.sleep(10)
-    green_led.blink(0.1, 0.1)
-    time.sleep(5)
-    green_led.on()
-    log.save_event()
+    save_event = False
+    while True:
+        if save_event:
+            green_led.on()
+            log.save_event()
+            print("writing event")
+            # Output adc0 data (heel sensor)
+            with open('e%s_heel_d.txt' %log.event_i, 'w') as f:
+                print("first file opened")
+                for i in range(2500):
+                    f.write(str(log.events[log.event_i-1][0][0][i]))
+                    f.write('\n')
+            with open('e%s_heel_t.txt' %log.event_i, 'w') as f:
+                for i in range(2500):
+                    f.write(str(log.events[log.event_i-1][0][1][i]))
+                    f.write('\n')
 
-    with open('proc_out.txt', 'w') as f:
-        for i in range(2500):
-            f.write(str(log.events[0][0][0][i]) + ", " + str(log.events[0][0][1][i]))
-            f.write('\n')
+            # Output adc1 data (toe sensor)
+            with open('e%s_toe_d.txt' %log.event_i, 'w') as f:
+                for i in range(2500):
+                    f.write(str(log.events[log.event_i-1][1][0][i]))
+                    f.write('\n')
+            with open('e%s_toe_t.txt' %log.event_i, 'w') as f:
+                for i in range(2500):
+                    f.write(str(log.events[log.event_i-1][1][1][i]))
+                    f.write('\n')
 
-    with open('proc_out1.txt', 'w') as f:
-        for i in range(2500):
-            f.write(str(log.events[0][1][0][i]) + ", " + str(log.events[0][1][1][i]))
-            f.write('\n')
+            # Output gyro0 data (spin/rotation)
+            with open('e%s_spin_d.txt' %log.event_i, 'w') as f:
+                for i in range(2500):
+                    f.write(str(log.events[log.event_i-1][2][0][i]))
+                    f.write('\n')
+            with open('e%s_spin_t.txt' %log.event_i, 'w') as f:
+                for i in range(2500):
+                    f.write(str(log.events[log.event_i-1][2][1][i]))
+                    f.write('\n')
+            print("done writing")
 
-    with open('proc_out2.txt', 'w') as f:
-        for i in range(2500):
-            f.write(str(log.events[0][2][0][i]) + ", " + str(log.events[0][2][1][i]))
-            f.write('\n')
+            save_event = False
+            green_led.off()
+        else:
+            green_led.blink(0.2, 0.2)
+            cal_button.wait_for_active()
+            save_event = True
 
 
 if __name__ == '__main__':

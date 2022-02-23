@@ -65,7 +65,7 @@ class Log:
     def save_event(self):  # Formats the raw sensor data lpf -> offset -> calibration -> adjust timestamps to start at 0
         print("saving event")
         a0 = self.lpf_buffer(0, 10)
-        a1 = self.lpf_buffer(1, 10)
+        a1 = self.lpf_buffer(1, 100)
         g0 = self.lpf_buffer(2, 3)
         #t_off0 = a0[1][self.buffer_length - 1]
         #t_off1 = a1[1][self.buffer_length - 1]
@@ -79,3 +79,5 @@ class Log:
         #for i in range(self.buffer_length):
         #    g0[1][i] = round(a1[1][i] - t_off2, 4)
         self.events.append([a0, a1, g0])
+        print("event appended")
+        self.event_i += 1
