@@ -24,6 +24,8 @@ See below for circuit and system diagrams.
 3. Jump: total rotation
 4. Jump: weight distribution (forwards/backwards)
 5. Jump: leg stiffness on landing
+6. The user saves separate jumps ("events") to the server
+7. Statistics for jumps on different days are displayed graphically on a website
 
 ---
 
@@ -33,12 +35,22 @@ See below for circuit and system diagrams.
 3. Total session statistics for both feet
    1. Time spent on each foot
    2. Estimated relative training of each leg
-4. 
+4. Specific analysis for spin technique
 
 ---
+
+### System level diagram
+
+![alt text](sys_diagram.png "System level diagram")
+
+---
+
+### Analogue circuit for force sensor interface
 
 ![alt text](circuit.png "Analogue circuit for force sensor interface")
 
 ---
 
-![alt text](sys_diagram.png "System level diagram")
+### Concept of final hardware
+
+![alt text](product_concept.jpeg "Concept of final hardware")
