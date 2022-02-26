@@ -9,7 +9,7 @@ import concurrent.futures
 from gpiozero import Button
 from gpiozero import LED
 
-broker_ip = "129.31.162.182"
+broker_ip = "146.169.173.245"
 
 log = Log()
 
@@ -22,6 +22,17 @@ t0 = time.perf_counter()
 cal_button = Button(27)
 red_led = LED(23)
 green_led = LED(22)
+
+def on_disconnect(client, userdata, rc=0):
+    client.loop_stop()
+
+client = mqtt.Client()
+print("created client")
+print(client.connect("146.169.173.245", port=1883))
+client.subscribe("IC.embedded/GROUP_NAME/#")
+client.loop_start()
+client.on_disconnect = on_disconnect
+
 
 def readFsrAdcs():
     while True:
@@ -72,53 +83,51 @@ def eventLogging():
 
             # Create and send JSON object
 
-            # MQTT_dict = {
-            #     "eventID": (log.event_i-1),
-            #     "heel_data": log.events[log.event_i-1][0][0],
-            #     "heel_time": log.events[log.event_i-1][0][1],
-            #     "toe_data": log.events[log.event_i-1][1][0],
-            #     "toe_time": log.events[log.event_i-1][1][1],
-            #     "spin_data": log.events[log.event_i-1][2][0],
-            #     "spin_time": log.events[log.event_i-1][2][1]
-            # }
-            #
-            # json_obj = json.dumps(MQTT_dict)
-            #
-            # client = mqtt.Client()
-            # print(client.connect(broker_ip, port=1883))
-            # MSG_INFO = client.publish("IC.embedded/skate_comp/test", json_obj)
-            # print(mqtt.error_string(MSG_INFO.rc))
+            MQTT_dict = {
+                "eventID": (log.event_i-1),
+                "heel_data": log.events[log.event_i-1][0][0],
+                "heel_time": log.events[log.event_i-1][0][1],
+                "toe_data": log.events[log.event_i-1][1][0],
+                "toe_time": log.events[log.event_i-1][1][1],
+                "spin_data": log.events[log.event_i-1][2][0],
+                "spin_time": log.events[log.event_i-1][2][1]
+            }
+            print("created dict")
+            json_obj = json.dumps(MQTT_dict)
+            print("created JSON")
+            MSG_INFO = client.publish("IC.embedded/GROUP_NAME/test", json_obj)
+            print(mqtt.error_string(MSG_INFO.rc))
 
             # Output adc0 data (heel sensor)
-            with open('e%s_heel_d.txt' %log.event_i, 'w') as f:
-                print("first file opened")
-                for i in range(2500):
-                    f.write(str(log.events[log.event_i-1][0][0][i]))
-                    f.write('\n')
-            with open('e%s_heel_t.txt' %log.event_i, 'w') as f:
-                for i in range(2500):
-                    f.write(str(log.events[log.event_i-1][0][1][i]))
-                    f.write('\n')
-
-            # Output adc1 data (toe sensor)
-            with open('e%s_toe_d.txt' %log.event_i, 'w') as f:
-                for i in range(2500):
-                    f.write(str(log.events[log.event_i-1][1][0][i]))
-                    f.write('\n')
-            with open('e%s_toe_t.txt' %log.event_i, 'w') as f:
-                for i in range(2500):
-                    f.write(str(log.events[log.event_i-1][1][1][i]))
-                    f.write('\n')
-
-            # Output gyro0 data (spin/rotation)
-            with open('e%s_spin_d.txt' %log.event_i, 'w') as f:
-                for i in range(2500):
-                    f.write(str(log.events[log.event_i-1][2][0][i]))
-                    f.write('\n')
-            with open('e%s_spin_t.txt' %log.event_i, 'w') as f:
-                for i in range(2500):
-                    f.write(str(log.events[log.event_i-1][2][1][i]))
-                    f.write('\n')
+            # with open('e%s_heel_d.txt' %log.event_i, 'w') as f:
+            #     print("first file opened")
+            #     for i in range(2500):
+            #         f.write(str(log.events[log.event_i-1][0][0][i]))
+            #         f.write('\n')
+            # with open('e%s_heel_t.txt' %log.event_i, 'w') as f:
+            #     for i in range(2500):
+            #         f.write(str(log.events[log.event_i-1][0][1][i]))
+            #         f.write('\n')
+            #
+            # # Output adc1 data (toe sensor)
+            # with open('e%s_toe_d.txt' %log.event_i, 'w') as f:
+            #     for i in range(2500):
+            #         f.write(str(log.events[log.event_i-1][1][0][i]))
+            #         f.write('\n')
+            # with open('e%s_toe_t.txt' %log.event_i, 'w') as f:
+            #     for i in range(2500):
+            #         f.write(str(log.events[log.event_i-1][1][1][i]))
+            #         f.write('\n')
+            #
+            # # Output gyro0 data (spin/rotation)
+            # with open('e%s_spin_d.txt' %log.event_i, 'w') as f:
+            #     for i in range(2500):
+            #         f.write(str(log.events[log.event_i-1][2][0][i]))
+            #         f.write('\n')
+            # with open('e%s_spin_t.txt' %log.event_i, 'w') as f:
+            #     for i in range(2500):
+            #         f.write(str(log.events[log.event_i-1][2][1][i]))
+            #         f.write('\n')
             print("done writing")
 
             save_event = False
