@@ -4,7 +4,201 @@ import paho.mqtt.client as mqtt
 import json
 import eventlet
 import socketio
+import matplotlib.pyplot as plt
+import scipy
+import scipy.signal
+from scipy import integrate
+import numpy as np
+import math
 
+############################################################
+#               START OF SIGNAL PROCESSING                 #
+############################################################
+
+def gaussian_filter_1d(sigma):
+    # sigma: the parameter sigma in the Gaussian kernel (unit: pixel)
+    #
+    # return: a 1D array for the Gaussian
+    size = 6 * sigma
+    h = np.zeros(size + 1)
+    for i in range(size + 1):
+        x = i - 3 * sigma
+        h[i] = math.exp(-(x**2) / (2 * sigma * sigma)) / (np.sqrt(2 * np.pi) * sigma)
+    return h
+
+def findPeakValue(arr_data, starting_index, arr_time):
+    peak_value = 0.0
+    peak_value_time = 0
+    index = 0
+    for i in range(len(arr_data) - starting_index):
+        #print(arr[i])
+        if peak_value < arr_data[starting_index + i]:
+            peak_value = arr_data[starting_index + i]
+            peak_value_time = arr_time[starting_index + i]
+            index = starting_index + i
+    return (peak_value, peak_value_time, index)
+# 1 2 3 4 5 6 
+def findTroughValue(arr_data, starting_index, arr_time):
+    trough_value = 0.0
+    trough_value_time = 0
+    index = 0
+    for i in range(starting_index + 1):
+        #print(arr[i])
+        if trough_value > arr_data[starting_index - i]:
+            trough_value = arr_data[starting_index - i]
+            trough_value_time = arr_time[starting_index - i]
+            index = starting_index - i
+    return (trough_value, trough_value_time, index)
+
+def binarySearch(data, val):
+    highIndex = len(data)-1
+    lowIndex = 0
+
+    while highIndex > lowIndex:
+            index = (highIndex + lowIndex) // 2
+            sub = data[index]
+            if data[lowIndex] == val:
+                    return [lowIndex, lowIndex]
+            elif sub == val:
+                    return [index, index]
+            elif data[highIndex] == val:
+                    return [highIndex, highIndex]
+            elif sub > val:
+                    if highIndex == index:
+                            return sorted([highIndex, lowIndex])
+                    highIndex = index
+            else:
+                    if lowIndex == index:
+                            return sorted([highIndex, lowIndex])
+                    lowIndex = index
+    return sorted([highIndex, lowIndex])
+
+def searchClosest(data, val):
+    current_closest = (0, 0)
+    for i in range(len(data) - 1):
+        if (val - (data[current_closest[0]] + data[current_closest[1]]) / 2) > (val - (data[i] + data[i + 1]) / 2) :
+            current_closest = (i, i + 1)
+            
+
+    return current_closest
+
+def searchClosestWithTime(data, val, times, startFrom):
+    current_closest = (0, 0)
+
+    index = 0
+    while times[index] < startFrom:
+        index = index + 1
+
+    for item in data[index:]:
+        if ((val - (data[current_closest[0]] + data[current_closest[1]]) / 2) > (val - (data[index - 1] + data[index]) / 2)):
+            current_closest = (index - 1, index)
+        index = index + 1
+
+    return current_closest
+
+def findValueByTime(time, arr_data, arr_time):
+    index1, index2 = binarySearch(arr_time, time)
+    value = (arr_data[index1] + arr_data[index2]) / 2
+
+    return value
+
+def findIndexByTime(time, arr_time):
+    index1, index2 = binarySearch(arr_time, time)
+    return max(index1, index2)
+
+def findTimeByValue(value, arr_data, arr_time, startFrom):
+    index1, index2 = searchClosestWithTime(arr_data, value, arr_time, startFrom)
+    print(arr_time[index1], arr_time[index2])
+    value = (arr_time[index1] + arr_time[index2]) / 2
+
+    return value
+
+def findRotationInterval(arr, peakIndex):
+    startIndex = 0
+    endIndex = 0
+    for i in range(peakIndex + 1):
+        if arr[peakIndex - i] == 0:
+            startIndex = peakIndex - i
+            break
+
+    for i in range(len(arr) - peakIndex):
+        if arr[peakIndex + i] == 0:
+            endIndex = peakIndex + i
+            break
+    return (startIndex, endIndex)
+
+def signalProcessing(d_toe, t_toe, d, t, spin_data, spin_time):
+    d_toe.reverse()
+    t_toe.reverse()
+    t.reverse()
+    d.reverse()
+    spin_data.reverse()
+    spin_time.reverse()
+
+    difference_kernel = [1, 0, -1]
+    gaussian = gaussian_filter_1d(11)
+
+    gaussian_smoothed_signal = (scipy.signal.convolve(d, gaussian))[:2500]
+
+    # scale time because of delay added by gaussian
+    gaussian_t = list(range(len(t)))
+    for i in range(len(t)):
+        gaussian_t[i] = t[i] - 0.15
+
+    difference_signal = scipy.signal.convolve(gaussian_smoothed_signal, difference_kernel)
+
+    # This is the index of the time in relation to the gyro signal
+    jump_midpoint, jump_midpoint_time, jump_midpoint_index = findPeakValue(spin_data, 0, spin_time)
+    
+    intervalStart, intervalEnd = findRotationInterval(spin_data, jump_midpoint_index)
+
+    total_rotation = integrate.cumtrapz(spin_data[intervalStart:intervalEnd], spin_time[intervalStart:intervalEnd])
+    print("Total rotation: ", total_rotation)
+    print("Jump Mid-point: ", jump_midpoint_time, " ", jump_midpoint )
+
+    #DIFFERENCE PLOT
+    # We use the jump_midpoint_time to find the index in the correct time stamp.
+    # Here we are looking for the point of landing and therefore must be after the jump_midpoint_time
+    highest_derivative, highest_derivative_time, highest_derivative_time_index = findPeakValue(difference_signal, findIndexByTime(jump_midpoint_time, gaussian_t), gaussian_t)
+
+    lowest_derivative, lowest_derivative_time, lowest_derivative_time_index = findTroughValue(difference_signal, findIndexByTime(jump_midpoint_time, gaussian_t), gaussian_t)
+    
+    print("Start jump: ", lowest_derivative_time)
+
+    landing_peak_value, a, peak_index = findPeakValue(gaussian_smoothed_signal, findIndexByTime(jump_midpoint_time, gaussian_t), gaussian_t)
+
+    # TODO: ONLY SEARCH SOME TO SOME INDEX BEFORE AND AFTER
+    takeoff_peak_value, _, takeoff_peak_index = findPeakValue(d_toe[:findIndexByTime(jump_midpoint_time, gaussian_t)], 0, t_toe)
+    landToe_peak_value, _, landToe_peak_index = findPeakValue(d_toe, findIndexByTime(jump_midpoint_time, gaussian_t), t_toe)
+    print("TOE: ", takeoff_peak_value, " ", landToe_peak_value)
+    isToeHeavy = True if takeoff_peak_value <= landToe_peak_value else False
+
+    finished_landing_point = landing_peak_value * 0.4
+    print("Started landing value: ", landing_peak_value)
+    print("Finished landing value: ", finished_landing_point)
+
+    # Find the threshold value which represents the end of the landing
+    index = 0
+    for point in gaussian_smoothed_signal[peak_index:]:
+        if point < finished_landing_point:
+            break
+        index += 1
+
+    print(gaussian_smoothed_signal[peak_index + index -1])
+    print("Started landing time: ", gaussian_t[peak_index])
+    air_time = highest_derivative_time - lowest_derivative_time
+    print("Air time: ", air_time)
+    print("Finished landing time: ", gaussian_t[peak_index + index - 1])
+    landing_time = gaussian_t[peak_index + index -1 ] - gaussian_t[peak_index]
+    print("Landing time: ", landing_time)
+
+    return (air_time, landing_time, total_rotation, jump_midpoint, isToeHeavy)
+
+
+
+############################################################
+#               START OF SIGNAL PROCESSING                 #
+############################################################
 
 messageQueue = []
 
@@ -32,66 +226,6 @@ def getData(sid, data):
     while len(messageQueue) > 0:
         sio.emit('setData', messageQueue.pop(0))
 
-# #Every first message to the server is going to be a header of 64,
-# #which tells us the length of the next message
-# HEADER = 64
-# #Port
-# PORT = 5050
-# #get the IP address of the server by the server's name
-# SERVER = socket.gethostbyname(socket.gethostname())
-# ADDR = (SERVER, PORT)
-# FORMAT = 'utf-8'
-# DISCONNECT_MESSAGE = "!DISCONNECT"
-# ACK_TEXT = 'text_received'
-
-# #We created a socket of family INET with type SOCK_STREAM
-# server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# #we bind the socket to the address
-# server.bind(ADDR)
-
-# def handle_client(conn, addr):
-#     print(f"[NEW CONNECTIONG] {addr} connected.")
-
-#     connected = True
-#     while connected:
-#         #wait until something is received
-#         # print("Gonna send?", len(messageQueue))
-#         # msg_length = conn.recv(HEADER).decode(FORMAT)
-#         # if msg_length:
-#         #     msg_length = int(msg_length)
-#         #     msg = conn.recv(msg_length).decode(FORMAT)
-#         #     if msg == DISCONNECT_MESSAGE:
-#         #         connected = False
-
-#         #     print(f"[{addr}] {msg}")
-        
-#         print("Gonna send?", len(messageQueue))
-#         if len(messageQueue):
-#             conn.sendall(messageQueue.pop(0))
-#             # receive acknowledgment from the server
-#             # encodedAckText = conn.recv(1024)
-#             # ackText = encodedAckText.decode('utf-8')
-
-#             # # log if acknowledgment was successful
-#             # if ackText == ACK_TEXT:
-#             #     print('server acknowledged reception of text')
-#             # else:
-#             #     print('error: server has sent back ' + ackText)
-
-#     conn.close()
-
-# def start():
-#     server.listen()
-#     print(f"[LISTENING] Server is listenning on {SERVER}")
-#     while True:
-#         #when a new connection occurs we store the addr
-#         conn, addr = server.accept()
-#         # handle_client(conn, addr)
-#         # print("Active connection - 1")
-#         thread = threading.Thread(target = handle_client, args = (conn, addr))
-#         thread.start()
-#         print(f"[ACTIVE CONNECTIONS] {threading.activeCount() - 1}")
-
 ######################################################
 #               START OF MQTT SET UP                 #
 ######################################################
@@ -100,6 +234,8 @@ def on_message(client, userdata, message) :
     # m_in=json.loads(msg_decoced)
     # print(m_in)
     #print("Received message:{} on topic{}".format(message.payload, message.topic))
+    print(msg_decoced)
+    print("TYPE: ", type(msg_decoced))
     messageQueue.append(msg_decoced)
     print(len(messageQueue))
 
@@ -133,7 +269,7 @@ client.on_connect= on_connect
 #client.tls_set(ca_certs="mosquitto.org.crt", certfile="client.crt", keyfile="client.key")
 
 # Connect to port 8884 in order to make a secure connection 8884
-client.connect("146.169.163.5",port=1883)
+client.connect("146.169.173.245",port=1883)
 
 #subscribe to that topic
 client.subscribe("IC.embedded/GROUP_NAME/#")
