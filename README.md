@@ -14,12 +14,16 @@ It is only within the scope of this project to implement the sensing on a single
 however future developments would collect information from both the athlete's skates,
 broadening the available analysis of their technique and health.
 
+See below for circuit and system diagrams. 
+
 ---
 
 ### Implemented Features (*within scope of project*):
-1. Jump: peak relative landing force
-2. Jump: weight distribution (forwards/backwards)
-3. Jump&Spin: Peak and average angular velocity
+1. Jump: peak angular velocity
+2. Jump: air time
+3. Jump: total rotation
+4. Jump: weight distribution (forwards/backwards)
+5. Jump: leg stiffness on landing
 
 ---
 
@@ -29,5 +33,12 @@ broadening the available analysis of their technique and health.
 3. Total session statistics for both feet
    1. Time spent on each foot
    2. Estimated relative training of each leg
+4. 
 
 ---
+
+![alt text](circuit.png "Analogue circuit for force sensor interface")
+
+---
+
+![alt text](sys_diagram.png "System level diagram")
