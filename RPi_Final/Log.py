@@ -51,7 +51,6 @@ class Log:
             adjusted_width = width  # stop filter wrapping start and end of signal
             if i < width:
                 adjusted_width = i + 1
-            print(adjusted_width)
             filtered_buffer[0].append(self.lpf(sig_id, -i, adjusted_width))
             filtered_buffer[1].append(self.buffers[sig_id][1][self.i_convert(-i, self.buffer_i[sig_id] - 1)])
         return filtered_buffer  # new buffer, arranged in reverse time order
@@ -69,7 +68,7 @@ class Log:
     def save_event(self):  # Formats the raw sensor data lpf -> offset -> calibration -> adjust timestamps to start at 0
         print("saving event")
         a0 = self.lpf_buffer(0, 10)
-        a1 = self.lpf_buffer(1, 100)
+        a1 = self.lpf_buffer(1, 30)
         g0 = self.lpf_buffer(2, 3)
         for i in range(self.buffer_length):
             a0[0][i] = round((a0[0][i] - self.sig_offsets[0])/self.sig_cal[0] * 0.25, 4)
