@@ -49,11 +49,11 @@ def database_read(start_date, end_date):
 
     ### ADD ALL VALUES TO THEIR CORRESPONDING LISTS ###
     for i in range (0, len(results)):
-        air_time_list.append(results[i][2])
-        landing_time_list.append(results[i][3])
-        total_rotation_list.append(results[i][4])
-        peak_rotation_list.append(results[i][5])
-        toe_heavy_list.append(results[i][6])
+        air_time_list.append(i+1,results[i][2])
+        landing_time_list.append(i+1,results[i][3])
+        total_rotation_list.append(i+1,results[i][4])
+        peak_rotation_list.append(i+1,results[i][5])
+        toe_heavy_list.append(i+1,results[i][6])
 
     return air_time_list, landing_time_list, total_rotation_list, peak_rotation_list, toe_heavy_list
 
