@@ -1,3 +1,4 @@
+from concurrent.futures import process
 import socket
 import threading
 import paho.mqtt.client as mqtt
@@ -10,6 +11,12 @@ import scipy.signal
 from scipy import integrate
 import numpy as np
 import math
+
+#DATABASE SUPPORT CODE FOR AXELERATE TRACKER
+import time
+from sys import getsizeof
+import sqlite3 as db
+from datetime import datetime
 
 ############################################################
 #               START OF SIGNAL PROCESSING                 #
@@ -135,6 +142,8 @@ def signalProcessing(d_toe, t_toe, d, t, spin_data, spin_time):
     spin_data.reverse()
     spin_time.reverse()
 
+    print(len(spin_data))
+
     difference_kernel = [1, 0, -1]
     gaussian = gaussian_filter_1d(11)
 
@@ -150,9 +159,14 @@ def signalProcessing(d_toe, t_toe, d, t, spin_data, spin_time):
     # This is the index of the time in relation to the gyro signal
     jump_midpoint, jump_midpoint_time, jump_midpoint_index = findPeakValue(spin_data, 0, spin_time)
     
+    #Check if there is  rotation
+    if(jump_midpoint <= 0):
+        return {"air_time":0, "landing_time":0, "total_rotation":0, "jump_midpoint":0, "isToeHeavy":False}
+
     intervalStart, intervalEnd = findRotationInterval(spin_data, jump_midpoint_index)
 
-    total_rotation = integrate.cumtrapz(spin_data[intervalStart:intervalEnd], spin_time[intervalStart:intervalEnd])
+    print(len(spin_data[intervalStart:intervalEnd]), len(spin_time[intervalStart:intervalEnd]))
+    total_rotation = integrate.cumtrapz(spin_data[intervalStart:intervalEnd], spin_time[intervalStart:intervalEnd])[-1]
     print("Total rotation: ", total_rotation)
     print("Jump Mid-point: ", jump_midpoint_time, " ", jump_midpoint )
 
@@ -192,7 +206,7 @@ def signalProcessing(d_toe, t_toe, d, t, spin_data, spin_time):
     landing_time = gaussian_t[peak_index + index -1 ] - gaussian_t[peak_index]
     print("Landing time: ", landing_time)
 
-    return (air_time, landing_time, total_rotation, jump_midpoint, isToeHeavy)
+    return {"air_time":air_time, "landing_time":landing_time, "total_rotation":total_rotation, "jump_midpoint":jump_midpoint, "isToeHeavy":isToeHeavy}
 
 
 
@@ -224,19 +238,31 @@ def disconnect(sid):
 def getData(sid, data):
     print('message ', messageQueue)
     while len(messageQueue) > 0:
+        print(type(messageQueue))
         sio.emit('setData', messageQueue.pop(0))
+        
+@sio.on('dbQuery')
+def dbQuery(sid, data)
+    sio.emit('databaseReturn', database_read(data.startDate,data.endDate))
 
 ######################################################
 #               START OF MQTT SET UP                 #
 ######################################################
 def on_message(client, userdata, message) :
+    #print(message)
+    #print(type(message))
     msg_decoced = str(message.payload.decode("utf-8", "ignore"))
+    data = json.loads(msg_decoced)
+    print(len(data["toe_data"]), len(data["toe_time"]), len(data["heel_data"]), len(data["heel_time"]), len(data["spin_data"]), len(data["spin_time"]))
+    processedData = signalProcessing(data["toe_data"], data["toe_time"], data["heel_data"], data["heel_time"], data["spin_data"], data["spin_time"])
     # m_in=json.loads(msg_decoced)
     # print(m_in)
     #print("Received message:{} on topic{}".format(message.payload, message.topic))
-    print(msg_decoced)
-    print("TYPE: ", type(msg_decoced))
-    messageQueue.append(msg_decoced)
+    #print(msg_decoced)
+    #print("TYPE: ", type(msg_decoced))
+
+    messageQueue.append(processedData[0],processedData[1],processedData[2],processedData[3],processedData[4])
+    database_write()
     print(len(messageQueue))
 
 def on_disconnect(client, userdata,rc=0):
@@ -286,3 +312,88 @@ print("[STARTING] server is starting...")
 # start()
 if __name__ == '__main__':
     eventlet.wsgi.server(eventlet.listen(('', 5000)), app)
+    
+
+
+############################################################
+#                     START OF DATABASE                    #
+############################################################
+
+
+def database_init():
+    ### INITIALISE A NEW TABLE WITH THE FOLLOWING ATTRIBUTES ###
+
+    cursor.execute("""CREATE TABLE IF NOT EXISTS sessions (
+                                                date DATE,
+                                                time TIME,
+                                                air_time FLOAT,
+                                                landing_time FLOAT,
+                                                total_rotation FLOAT,
+                                                peak_rotation FLOAT,
+                                                toe_heavy BOOL) """)
+
+
+def database_write(air_time, landing_time, total_rotation, peak_rotation, toe_heavy):
+
+    ### GET CURRENT TIME TO PAIR WITH INCOMING DATA ###
+    current_date = datetime.today().strftime('%Y-%m-%d')
+    current_time = datetime.today().strftime('%H:%M:%S')
+
+    ### INSERT WHOLE DATA TO DATABASE ###
+    data_to_upload = (current_date, current_time, air_time, landing_time, total_rotation, peak_rotation, toe_heavy)
+    db_insert_statement = "INSERT INTO sessions VALUES (?,?,?,?,?,?,?)"
+    cursor.execute(db_insert_statement, data_to_upload)
+
+    ### SAVE DATABASE STATE ###
+    connection.commit()
+
+
+def database_read(start_date, end_date):
+    ### RETRIEVE DATA FROM THE DATABASE ###
+
+    db_select_statement = "SELECT * FROM sessions WHERE date BETWEEN ? AND ?"
+    date_range = (start_date, end_date)
+    cursor.execute(db_select_statement, date_range)
+
+    ### GET ALL THE ENTRIES RETURNED FROM THE SELECT STATEMENT ###
+    results = cursor.fetchall()
+    #print(results)
+
+    ### ADD ALL VALUES TO THEIR CORRESPONDING LISTS ###
+    for i in range (0, len(results)):
+        air_time_list.append((i+1,results[i][2]))
+        landing_time_list.append((i+1,results[i][3]))
+        total_rotation_list.append((i+1,results[i][4]))
+        peak_rotation_list.append((i+1,results[i][5]))
+        toe_heavy_list.append((i+1,results[i][6]))
+
+    return (air_time_list, landing_time_list, total_rotation_list, peak_rotation_list, toe_heavy_list)
+
+
+
+### Test code, check to see how the functions should be called in back-/front-end ###
+connection = db.connect("skating_data.db")
+cursor = connection.cursor()
+
+air_time_list = []
+landing_time_list = []
+total_rotation_list = []
+peak_rotation_list = []
+toe_heavy_list = []
+#All of the above needed for proper functionality
+
+#initialise db
+database_init()
+
+#write to db
+database_write(0,2,4,6,8)
+time.sleep(2)
+database_write(1,3,5,7,9)
+
+#read from db
+(air_time_list, landing_time_list, total_rotation_list, peak_rotation_list, toe_heavy_list) = database_read("2022-02-26", "2022-02-26")
+print(air_time_list, landing_time_list, total_rotation_list, peak_rotation_list, toe_heavy_list)
+
+
+### NOT SURE ATM HOW ESSENTIAL THIS IS, FURTHER READING NEEDED ###
+connection.close()
