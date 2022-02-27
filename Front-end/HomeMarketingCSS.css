@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Source+Sans+3:ital,wght@1,600&display=swap');
 
 
 body{
@@ -28,6 +28,7 @@ body{
 
 .logo{
     display: flex;
+    align-items: flex-end;
 }
 
 .logo img{
@@ -38,10 +39,12 @@ body{
     font-family: 'Source Sans 3', sans-serif;
     font-size: clamp(30px, 2.87vw, 65px);
     font-weight: 600;
+    font-style: italic;
     color: #2363C3;
     letter-spacing: 0.02em;
-    margin-left: -20px;
-    margin-top: clamp(18px, 1.56vw, 35px);
+    margin-left: -10px;
+    margin-bottom: -8px;
+    transform: skew(-7deg);
 }
 
 .signIn{
@@ -333,8 +336,98 @@ body{
 .sec5row{
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
+    width: 87%;
+    margin: auto;
+}
+
+.sec5feature{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.sec5feature:nth-child(odd){
+    margin-bottom: clamp(80px, 6.25vw, 130px);
+}
+
+.sec5feature.firstFeature{
+    position: relative;
+    left: clamp(70px, 5.2vw, 120px);
 }
 
 .sec5feature svg{
     width: clamp(70px, 6.25vw, 140px);
+    margin-bottom: clamp(20px, 1.56vw, 35px);
+}
+
+.productSec5{
+    width: 40%;
+    margin-left: 30px;
+    margin-right: clamp(40px, 4.2vw, 90px);
+}
+
+.sec5feature p{
+    font-family: 'Rubik', sans-serif;
+    font-size: clamp(20px, 1.35vw, 28px);
+    font-weight: 300;
+    color: #222222;
+    margin: 0px;
+    text-align: center;
+}
+
+.videoTitle{
+    font-family: 'Rubik', sans-serif;
+    font-size: clamp(40px, 4.2vw, 90px);
+    font-weight: 500;
+    font-style: italic;
+    color: #222222;
+    margin: clamp(120px, 9.4vw, 210px) 0px clamp(70px, 4.7vw, 110   px) 0px;
+    text-align: center;
+}
+
+.pricing h2{
+    font-family: 'Rubik', sans-serif;
+    font-size: clamp(45px, 4.2vw, 90px);
+    font-weight: 500;
+    font-style: italic;
+    color: #222222;
+    margin: clamp(120px, 9.4vw, 210px) 0px clamp(70px, 4.7vw, 110   px) 0px;
+    text-align: center;
+}
+
+.footer{
+    width: 100%;
+    height: auto;
+    background-color: #2363C3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.logoFooter{
+    margin: 25px auto;
+    display: flex;
+    align-items: flex-end;
+}
+
+.logoFooter p{
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: clamp(30px, 2.87vw, 65px);
+    font-weight: 600;
+    font-style: italic;
+    color: #FAFCFE;
+    letter-spacing: 0.02em;
+    margin-left: -10px;
+    margin-bottom: -8px;
+    transform: skew(-7deg);
+}
+
+.disclaimer{
+    font-family: 'Rubik', sans-serif;
+    font-size: clamp(14px, 0.94vw, 20px);
+    font-weight: 300;
+    color: #FAFCFE;
+    margin: 0px 0px 50px 0px;
+    text-align: center;
 }
