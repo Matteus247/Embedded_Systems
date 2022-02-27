@@ -1,23 +1,42 @@
 
-
+//Setup websocket
 const sio = io.connect('http://localhost:5000');
+
+//Setup local storage for each signal
 localStorage.setItem("airTime", JSON.stringify([]))
 localStorage.setItem("landingTime", JSON.stringify([]))
 localStorage.setItem("totalRot", JSON.stringify([]))
 localStorage.setItem("jumpMid", JSON.stringify([]))
 localStorage.setItem("toeHeavy", JSON.stringify([]))
 
-// var testAirTime = [[1, 10],[2, 12]];
-// localStorage.setItem("airTime", JSON.stringify(testAirTime))
+
+const startDateInp = document.getElementById('start-date');
+const endDateInp = document.getElementById('end-date');
+const chartTypeMenu = document.getElementById('selectSession');
+var chartType = "airTime";
+
+const CATEGORIESchart = {
+  'Air Time': 'airTime',
+  'Landing Time': 'landingTime',
+  'Rotation': 'totalRot',
+  'Peak Rotation': 'jumpMid',
+  'Toe Heavy': 'toeHeavy'
+};
+
+//Test signal 
+ var testAirTime = [[1, 10],[2, 12]];
+ localStorage.setItem("airTime", JSON.stringify(testAirTime))
+ var testLandTime = [[1, 3],[2, 1]];
+ localStorage.setItem("landingTime", JSON.stringify(testLandTime))
 // console.log(localStorage.getItem("airTime"))
 
+//Websocket events
 sio.on('connect',function() {
     console.log('Client has connected to the server!');
 });
 
 sio.on('msg',function(data) {
     console.log('Received a message from the server!', data);
-    updateValues(data);
 });
 
 sio.on('disconnect',function() {
@@ -49,17 +68,44 @@ sio.on('setData',function(data) {
   drawChart()
 });
 
+
+//Listen to which chart the user wants
+chartTypeMenu.addEventListener('blur', () => setTimeout(() => {  
+  var chartType = CATEGORIESchart[document.querySelector('.select input[type=radio]:checked + label').innerHTML.trim()];
+  console.log(JSON.parse(localStorage.getItem(chartType)));
+  document.getElementById('jump-graph').innerHTML = "";
+  drawChart();
+}, 100));
+
+//Process data from database
+sio.on('databaseReturn', function(data){
+  localStorage.clear();
+  localStorage.setItem("airTime", JSON.stringify(data.ladning_time))
+  localStorage.setItem("landingTime", JSON.stringify(storedSignals2))
+  localStorage.setItem("totalRot", JSON.stringify(storedSignals3))
+  localStorage.setItem("jumpMid", JSON.stringify(storedSignals4))
+  localStorage.setItem("toeHeavy", JSON.stringify(storedSignals5))
+  document.getElementById('jump-graph').innerHTML = "";
+  drawChart();
+});
+
+//When the date changes, request info from database
+startDateInp.addEventListener('change', (event) => {
+  var startDateVal = startDateInp.value;
+  var endDateVal = endDateInp.value;
+  sio.send("["+startDateVal+","+endDateVal+"]");
+});
+
+endDateInp.addEventListener('change', (event) => {
+  var startDateVal = startDateInp.value;
+  var endDateVal = endDateInp.value;
+  sio.send("["+startDateVal+","+endDateVal+"]");
+});
+
 var intervalId = window.setInterval(function(){
   sio.emit('getData', "any");
 }, 5000);
 
-function updateValues(data){
-  document.getElementById("airTime").innerHTML = "Air Time: " + dictTest.air_time + "s";
-  document.getElementById("landingTime").innerHTML = "Landing Time: " + dictTest.landing_time + "s";
-  document.getElementById("totalRot").innerHTML = "Rotation: " + dictTest.total_rotation + "rad";
-  document.getElementById("jumpMid").innerHTML = "Jump Midpoint: " + dictTest.jump_midpoint + "s";
-  document.getElementById("toeHeavy").innerHTML = "Toe heavy jump: " + dictTest.isToeHeavy;
-}
 
 // var dictTest = {air_time: 0.6649265289306641, landing_time: 1.8953299522399902, total_rotation: 2.3961387153069174, jump_midpoint: 11.173666666666668, isToeHeavy: false}
 // document.getElementById("airTime").innerHTML = "Air Time: " + dictTest.air_time + "s";
@@ -74,10 +120,17 @@ function updateValues(data){
 
 google.charts.load('current', {'packages':['line']});
 google.charts.setOnLoadCallback(drawChart);
+var chart, data;
+
 
 function drawChart() {
-
-  var data = new google.visualization.DataTable();
+  if(chart!=undefined){
+    chart.clearChart();
+    data =[];
+    chart.data = [];
+    console.log(chart);
+  }
+  data = new google.visualization.DataTable();
   data.addColumn('number', 'Jump');
   data.addColumn('number', 'Air time');
   // data.addColumn('number', 'Spin');
@@ -89,7 +142,7 @@ function drawChart() {
   //   if(i!=signalArr.length)chartArray+=",";
   // }
 //  localStorage.getItem("airTime")
-  data.addRows(JSON.parse(localStorage.getItem("airTime")));
+  data.addRows(JSON.parse(localStorage.getItem(chartType)));
 
   // data.addRows([
   // [1,  37.8],
@@ -121,7 +174,7 @@ function drawChart() {
     // }
   };
 
-  var chart = new google.charts.Line(document.getElementById('jump-graph'));
+  chart = new google.charts.Line(document.getElementById('jump-graph'));
 
   chart.draw(data, google.charts.Line.convertOptions(options));
 }
