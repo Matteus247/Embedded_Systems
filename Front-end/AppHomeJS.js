@@ -9,12 +9,19 @@ localStorage.setItem("totalRot", JSON.stringify([]))
 localStorage.setItem("jumpMid", JSON.stringify([]))
 localStorage.setItem("toeHeavy", JSON.stringify([]))
 
+var performanceDivWidth = document.getElementsByClassName('performance-box')[0].offsetWidth;
 
 const startDateInp = document.getElementById('start-date');
 const endDateInp = document.getElementById('end-date');
 const chartTypeMenu = document.getElementById('selectSession');
 var chartType = "airTime";
 
+var dbDate = {
+  startDate: startDateInp.value,
+  endDate: endDateInp.value
+}
+
+//Used to map the selected chart type from front-end menu to the local storage signals
 const CATEGORIESchart = {
   'Air Time': 'airTime',
   'Landing Time': 'landingTime',
@@ -28,7 +35,6 @@ const CATEGORIESchart = {
  localStorage.setItem("airTime", JSON.stringify(testAirTime))
  var testLandTime = [[1, 3],[2, 1]];
  localStorage.setItem("landingTime", JSON.stringify(testLandTime))
-// console.log(localStorage.getItem("airTime"))
 
 //Websocket events
 sio.on('connect',function() {
@@ -47,6 +53,8 @@ sio.on('getData',function() {
     console.log('Got data from the server!');
 });
 
+
+//When receiving one jump that needs to be added to the local storage
 sio.on('setData',function(data) {
   console.log('Received a message from the server!', data);
   var storedSignals1 = JSON.parse(localStorage.getItem("airTime"))
@@ -65,14 +73,18 @@ sio.on('setData',function(data) {
   localStorage.setItem("jumpMid", JSON.stringify(storedSignals4))
   localStorage.setItem("toeHeavy", JSON.stringify(storedSignals5))
   
-  drawChart()
+  //Clear previous chart and draw the new one
+  document.getElementById('jump-graph').innerHTML = "";
+  drawChart();
 });
 
 
 //Listen to which chart the user wants
 chartTypeMenu.addEventListener('blur', () => setTimeout(() => {  
-  var chartType = CATEGORIESchart[document.querySelector('.select input[type=radio]:checked + label').innerHTML.trim()];
+  chartType = CATEGORIESchart[document.querySelector('.select input[type=radio]:checked + label').innerHTML.trim()];
   console.log(JSON.parse(localStorage.getItem(chartType)));
+
+  //Clear previous chart and draw the new one
   document.getElementById('jump-graph').innerHTML = "";
   drawChart();
 }, 100));
@@ -85,121 +97,53 @@ sio.on('databaseReturn', function(data){
   localStorage.setItem("totalRot", JSON.stringify(storedSignals3))
   localStorage.setItem("jumpMid", JSON.stringify(storedSignals4))
   localStorage.setItem("toeHeavy", JSON.stringify(storedSignals5))
+  
+  //Clear previous chart and draw the new one
   document.getElementById('jump-graph').innerHTML = "";
   drawChart();
 });
 
 //When the date changes, request info from database
 startDateInp.addEventListener('change', (event) => {
-  var startDateVal = startDateInp.value;
-  var endDateVal = endDateInp.value;
-  sio.send("["+startDateVal+","+endDateVal+"]");
+  dbDate.startDate = startDateInp.value;
+  dbDate.endDate = endDateInp.value;
+  sio.emit('dbQuery', dbDate);
 });
-
 endDateInp.addEventListener('change', (event) => {
-  var startDateVal = startDateInp.value;
-  var endDateVal = endDateInp.value;
-  sio.send("["+startDateVal+","+endDateVal+"]");
+  dbDate.startDate = startDateInp.value;
+  dbDate.endDate = endDateInp.value;
+  sio.emit('dbQuery', dbDate);
 });
 
 var intervalId = window.setInterval(function(){
   sio.emit('getData', "any");
 }, 5000);
 
-
-// var dictTest = {air_time: 0.6649265289306641, landing_time: 1.8953299522399902, total_rotation: 2.3961387153069174, jump_midpoint: 11.173666666666668, isToeHeavy: false}
-// document.getElementById("airTime").innerHTML = "Air Time: " + dictTest.air_time + "s";
-// document.getElementById("landingTime").innerHTML = "Landing Time: " + dictTest.landing_time + "s";
-// document.getElementById("totalRot").innerHTML = "Rotation: " + dictTest.total_rotation + "rad";
-// document.getElementById("jumpMid").innerHTML = "Jump Midpoint: " + dictTest.jump_midpoint + "s";
-// document.getElementById("toeHeavy").innerHTML = "Toe heavy jump: " + dictTest.isToeHeavy;
-
-//Transforming input data
-
-
-
 google.charts.load('current', {'packages':['line']});
 google.charts.setOnLoadCallback(drawChart);
-var chart, data;
+var chart;
 
 
 function drawChart() {
   if(chart!=undefined){
     chart.clearChart();
-    data =[];
-    chart.data = [];
-    console.log(chart);
   }
   data = new google.visualization.DataTable();
   data.addColumn('number', 'Jump');
-  data.addColumn('number', 'Air time');
-  // data.addColumn('number', 'Spin');
+  //Name the second axis according to the type of analysis
+  data.addColumn('number', Object.keys(CATEGORIESchart).find(key => CATEGORIESchart[key] === chartType));
 
-  // var signalArr = localStorage.getItem("airTime");
-  // var inputChart = "";
-  // for(var i=1; i<=signalArr.length; i++){
-  //   chartArray+="["+i+", "+signalArr[i]+"]"
-  //   if(i!=signalArr.length)chartArray+=",";
-  // }
-//  localStorage.getItem("airTime")
+  //Add the selected data from the local storage
   data.addRows(JSON.parse(localStorage.getItem(chartType)));
-
-  // data.addRows([
-  // [1,  37.8],
-  // [2,  30.9],
-  // [3,  25.4],
-  // [4,  11.7],
-  // [5,  11.9],
-  // [6,   8.8],
-  // [14,  4.2]
-  // ]);
 
   var options = {
     chart: {
       title: 'Sensors output vs time'
     },
-    width: 650,
+    width: performanceDivWidth*0.9,
     height: 350
-    // series: {
-    //   // Gives each series an axis name that matches the Y-axis below.
-    //   0: {axis: 'Force'},
-    //   1: {axis: 'Spin'}
-    // },
-    // axes: {
-    //   // Adds labels to each axis; they don't have to match the axis names.
-    //   y: {
-    //     Force: {label: 'Force (N)'},
-    //     Spin: {label: 'Spin (radians'}
-    //   }
-    // }
   };
 
   chart = new google.charts.Line(document.getElementById('jump-graph'));
-
   chart.draw(data, google.charts.Line.convertOptions(options));
 }
-
-
-
-// const mySocket = new WebSocket('ws://localhost:8082');
-
-// // Connection opened
-// mySocket.addEventListener('open', function (event) {
-//     mySocket.send('Opened server!');
-// });
-
-// // Listen for messages
-// mySocket.addEventListener('message', function (event) {
-//     console.log('Message from server: ', event.data);
-// });
-
-// var options = {
-//   fontName: "'Rubik', sans-serif",
-//   backgroundColor: "#FAFCFE",
-//   chartAre: {top: 100},
-//   tooltip: {textStyle: {color: '#000000'}, showColorCode: false},
-//   legend: {position:'bottom'},
-//   fontSize: 18,
-//   width: 650,
-//   height: 350
-// };
