@@ -28,7 +28,7 @@ body{
 }
 
 .logo-link{
-    margin-top: clamp(50px, 4.2vw, 100px);
+    margin-top: clamp(40px, 3.2vw, 80px);
 }
 
 .menu{
@@ -77,15 +77,15 @@ body{
     background-color: #FAFCFE;
     border-radius: clamp(25px, 2.1vw, 50px);
     font-family: 'Rubik', sans-serif;
-    padding-left: clamp(70px, 5.2vw, 120px);
+    padding-left: clamp(40px, 5.2vw, 120px);
     padding-right: clamp(70px, 5.2vw, 120px);
-    padding-top: clamp(50px, 3.6vw, 85px);
+    padding-top: clamp(30px, 2.6vw, 65px);
     display: grid;
-    grid-template-columns: 44% 6% 22% 6% 22%;
+    grid-template-columns: 58% 8% 34%;
     grid-template-rows: clamp(100px, 7.8vw, 170px) auto;
     grid-template-areas: 
-    "header header header header header"
-    "performance . . . setup";
+    "header header  header"
+    "performance . setup";
 }
 
 .greeting{
@@ -133,8 +133,9 @@ body{
 .performance-box{
     border-radius: clamp(20px, 1.6vw, 35px);
     background-color: #D4E5F7;
-    height: 500px;
+    height: auto;
     position: relative;
+    padding-bottom: 20px;
 }
 
 .setup-box{
@@ -143,9 +144,9 @@ body{
     height: 550px;
 }
 
-#pf-date{
+#start-date, #end-date{
     font-size: clamp(14px, 0.94vw, 20px);
-    margin: 20px 0px 20px 40px;
+    margin: 20px 0px 20px 25px;
     border: none;
     border-radius: 6px;
     padding: 5px 10px;
@@ -153,17 +154,22 @@ body{
     background-color: #FAFCFE;
 }
 
+.calendar-box{
+    display: flex;
+}
+
 .performance-menu{
     display: flex;
+    flex-direction: column;
     justify-content: flex-start;
     margin-bottom: 30px;
 }
 
 #jump-graph{
-    width: 650px;
+    width: 70%;
     height: 350px;
-    margin-left: 40px;
-    position: absolute;
+    margin-left: 25px;
+    /* position: absolute; */
     top: 21%;
 }
 
@@ -174,15 +180,13 @@ body{
     margin: 10px;
 }
 
-
-
 .select {
     display:flex;
     flex-direction: column;
     position:relative;
-    width:140px;
+    width:180px;
     height:36px;
-    margin: 20px 0px 20px 40px;
+    margin: 0px 0px 20px 25px;
     transition: all 0.5s ease-in-out; 
     z-index: 100;
     cursor: pointer;
