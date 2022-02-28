@@ -2,39 +2,39 @@ import paho.mqtt.client as mqtt
 import json
 import time
 
-broker_ip = "146.169.173.245"
+broker_ip = "146.169.153.141"
 
 def on_disconnect(client, userdata, rc=0):
     client.loop_stop()
 
 client = mqtt.Client()
 print("created client")
-print(client.connect("146.169.173.245", port=1883))
+print(client.connect("146.169.153.141", port=1883))
 client.subscribe("IC.embedded/GROUP_NAME/#")
 client.loop_start()
 client.on_disconnect = on_disconnect
 
-with open('e1_heel_d.txt', 'r') as f:
+with open('e5_heel_d.txt', 'r') as f:
     d = f.readlines()
-with open('e1_heel_t.txt', 'r') as f:
+with open('e5_heel_t.txt', 'r') as f:
     t = f.readlines()
 for i in range(len(d)):
     d[i] = float(d[i])
 for i in range(len(t)):
     t[i] = float(t[i])
 
-with open('e1_toe_d.txt', 'r') as f:
+with open('e5_toe_d.txt', 'r') as f:
     d1 = f.readlines()
-with open('e1_toe_t.txt', 'r') as f:
+with open('e5_toe_t.txt', 'r') as f:
     t1 = f.readlines()
 for i in range(len(d)):
     d1[i] = float(d1[i])
 for i in range(len(t)):
     t1[i] = float(t1[i])
 
-with open('e1_spin_d.txt', 'r') as f:
+with open('e5_spin_d.txt', 'r') as f:
     d2 = f.readlines()
-with open('e1_spin_t.txt', 'r') as f:
+with open('e5_spin_t.txt', 'r') as f:
     t2 = f.readlines()
 for i in range(len(d)):
     d2[i] = float(d2[i])

@@ -9,7 +9,7 @@ import concurrent.futures
 from gpiozero import Button
 from gpiozero import LED
 
-broker_ip = "146.169.173.245"
+broker_ip = "146.169.153.141"
 
 log = Log()
 
@@ -28,7 +28,7 @@ def on_disconnect(client, userdata, rc=0):
 
 client = mqtt.Client()
 print("created client")
-print(client.connect("146.169.173.245", port=1883))
+print(client.connect("146.169.153.141", port=1883))
 client.subscribe("IC.embedded/GROUP_NAME/#")
 client.loop_start()
 client.on_disconnect = on_disconnect
