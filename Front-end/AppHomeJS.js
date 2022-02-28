@@ -62,11 +62,11 @@ sio.on('setData',function(data) {
   var storedSignals3 = JSON.parse(localStorage.getItem("totalRot"))
   var storedSignals4 = JSON.parse(localStorage.getItem("peakRotSpeed"))
   var storedSignals5 = JSON.parse(localStorage.getItem("toeHeavy"))
-  storedSignals1.push([storedSignals1.length(), data.air_time])
-  storedSignals2.push([storedSignals1.length(), data.landing_time])
-  storedSignals3.push([storedSignals1.length(), data.total_rotation])
-  storedSignals4.push([storedSignals1.length(), data.jump_midpoint])
-  storedSignals5.push([storedSignals1.length(), data.isToeHeavy])
+  storedSignals1.push([storedSignals1.length, data.air_time])
+  storedSignals2.push([storedSignals1.length, data.landing_time])
+  storedSignals3.push([storedSignals1.length, data.total_rotation])
+  storedSignals4.push([storedSignals1.length, data.jump_midpoint])
+  storedSignals5.push([storedSignals1.length, Number(data.isToeHeavy)])
   localStorage.setItem("airTime", JSON.stringify(storedSignals1))
   localStorage.setItem("stiffness", JSON.stringify(storedSignals2))
   localStorage.setItem("totalRot", JSON.stringify(storedSignals3))
@@ -96,7 +96,7 @@ sio.on('databaseReturn', function(data){
   localStorage.setItem("stiffness", JSON.stringify(data.landing_time_list))
   localStorage.setItem("totalRot", JSON.stringify(data.total_rotation_list))
   localStorage.setItem("peakRotSpeed", JSON.stringify(data.peak_rotation_list))
-  localStorage.setItem("toeHeavy", JSON.stringify(data.toe_heavy_list))
+  localStorage.setItem("toeHeavy", JSON.stringify(Number(data.toe_heavy_list)))
   
   //Clear previous chart and draw the new one
   document.getElementById('jump-graph').innerHTML = "";
@@ -107,11 +107,13 @@ sio.on('databaseReturn', function(data){
 startDateInp.addEventListener('change', (event) => {
   dbDate.startDate = startDateInp.value;
   dbDate.endDate = endDateInp.value;
+  console.log("Sent dates: "+dbDate);
   sio.emit('dbQuery', dbDate);
 });
 endDateInp.addEventListener('change', (event) => {
   dbDate.startDate = startDateInp.value;
   dbDate.endDate = endDateInp.value;
+  console.log("Sent dates: "+dbDate);
   sio.emit('dbQuery', dbDate);
 });
 
