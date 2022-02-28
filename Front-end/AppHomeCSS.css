@@ -163,6 +163,7 @@ body{
     flex-direction: column;
     justify-content: flex-start;
     margin-bottom: 30px;
+    position: relative;
 }
 
 #jump-graph{
@@ -184,7 +185,7 @@ body{
     display:flex;
     flex-direction: column;
     position:relative;
-    width:180px;
+    width:240px;
     height:36px;
     margin: 0px 0px 20px 25px;
     transition: all 0.5s ease-in-out; 
@@ -231,9 +232,9 @@ body{
 }
 
 #selectSession:focus, #selectJump:focus{
-border:0.8px solid black;
-border-radius: 6px;
-height: 143px;
+    border:0.8px solid black;
+    border-radius: 6px;
+    height: 180px;
 }
 
 #selectSession:focus input:checked + label, #selectJump:focus input:checked + label{
@@ -289,4 +290,3 @@ width: 40px;
 content: '';
 background:transparent;
 }
-
