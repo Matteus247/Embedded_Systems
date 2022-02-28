@@ -22,14 +22,12 @@ from datetime import datetime
 #                     START OF DATABASE                    #
 ############################################################
 
-air_time_list = []
-landing_time_list = []
-total_rotation_list = []
-peak_rotation_list = []
-toe_heavy_list = []
+
 
 def database_init():
     ### INITIALISE A NEW TABLE WITH THE FOLLOWING ATTRIBUTES ###
+    connection = db.connect("skating_data.db")
+    cursor = connection.cursor()
 
     cursor.execute("""CREATE TABLE IF NOT EXISTS sessions (
                                                 date DATE,
@@ -59,6 +57,12 @@ def database_write(air_time, landing_time, total_rotation, peak_rotation, toe_he
 
 
 def database_read(start_date, end_date):
+    air_time_list = []
+    landing_time_list = []
+    total_rotation_list = []
+    peak_rotation_list = []
+    toe_heavy_list = []
+
     ### RETRIEVE DATA FROM THE DATABASE ###
     connection = db.connect("skating_data.db")
     cursor = connection.cursor()
@@ -78,6 +82,8 @@ def database_read(start_date, end_date):
         total_rotation_list.append((i+1,results[i][4]))
         peak_rotation_list.append((i+1,results[i][5]))
         toe_heavy_list.append((i+1,results[i][6]))
+
+    print(air_time_list, landing_time_list, total_rotation_list, peak_rotation_list, toe_heavy_list)
 
     return (air_time_list, landing_time_list, total_rotation_list, peak_rotation_list, toe_heavy_list)
 
@@ -307,7 +313,16 @@ def getData(sid, data):
         
 @sio.on('dbQuery')
 def dbQuery(sid, data):
-    sio.emit('databaseReturn', database_read(data.startDate,data.endDate))
+    print(data)
+    pulled_data = database_read(data["startDate"],data["endDate"])
+    return_dict = {
+        "air_time_list": pulled_data[0],
+        "landing_time_list": pulled_data[1], 
+        "total_rotation_list": pulled_data[2], 
+        "peak_rotation_list": pulled_data[3], 
+        "toe_heavy_list": pulled_data[4]
+    }
+    sio.emit('databaseReturn', return_dict)
 
 ######################################################
 #               START OF MQTT SET UP                 #

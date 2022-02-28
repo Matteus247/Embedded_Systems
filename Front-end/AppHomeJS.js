@@ -91,12 +91,14 @@ chartTypeMenu.addEventListener('blur', () => setTimeout(() => {
 
 //Process data from database
 sio.on('databaseReturn', function(data){
+  console.log(data);
   localStorage.clear();
   localStorage.setItem("airTime", JSON.stringify(data.air_time_list))
   localStorage.setItem("stiffness", JSON.stringify(data.landing_time_list))
   localStorage.setItem("totalRot", JSON.stringify(data.total_rotation_list))
   localStorage.setItem("peakRotSpeed", JSON.stringify(data.peak_rotation_list))
-  localStorage.setItem("toeHeavy", JSON.stringify(Number(data.toe_heavy_list)))
+  data.toe_heavy_list[1].forEach(function(element){return element ? 1:0});
+  localStorage.setItem("toeHeavy", JSON.stringify(data.toe_heavy_list))
   
   //Clear previous chart and draw the new one
   document.getElementById('jump-graph').innerHTML = "";
