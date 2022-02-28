@@ -392,8 +392,10 @@ client.loop_start()
 print("[STARTING] server is starting...")
 # start()
 if __name__ == '__main__':
-    eventlet.wsgi.server(eventlet.listen(('', 5000)), app)
     database_init()
+    eventlet.wsgi.server(eventlet.listen(('', 5000)), app)
+
+
 
 ### NOT SURE ATM HOW ESSENTIAL THIS IS, FURTHER READING NEEDED ###
 connection.close()

@@ -81,7 +81,7 @@ body{
     padding-right: clamp(70px, 5.2vw, 120px);
     padding-top: clamp(30px, 2.6vw, 65px);
     display: grid;
-    grid-template-columns: 58% 8% 34%;
+    grid-template-columns: 80% 8% 12%;
     grid-template-rows: clamp(100px, 7.8vw, 170px) auto;
     grid-template-areas: 
     "header header  header"

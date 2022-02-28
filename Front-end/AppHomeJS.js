@@ -66,7 +66,8 @@ sio.on('setData',function(data) {
   storedSignals2.push([storedSignals1.length, data.landing_time])
   storedSignals3.push([storedSignals1.length, data.total_rotation])
   storedSignals4.push([storedSignals1.length, data.jump_midpoint])
-  storedSignals5.push([storedSignals1.length, Number(data.isToeHeavy)])
+  var pushToe = data.toe_heavy ? 1:0;
+  storedSignals5.push([storedSignals1.length, pushToe])
   localStorage.setItem("airTime", JSON.stringify(storedSignals1))
   localStorage.setItem("stiffness", JSON.stringify(storedSignals2))
   localStorage.setItem("totalRot", JSON.stringify(storedSignals3))
@@ -141,11 +142,11 @@ function drawChart() {
   data.addRows(JSON.parse(localStorage.getItem(chartType)));
 
   var options = {
-    chart: {
-      title: 'Sensors output vs time'
-    },
+    hAxis: {titleTextStyle: {fontSize: 15}},
+    vAxis: {title: Object.keys(CATEGORIESchart).find(key => CATEGORIESchart[key] === chartType), titleTextStyle: {fontSize: 15}},
     width: performanceDivWidth*0.9,
     height: 350
+
   };
 
   chart = new google.charts.Line(document.getElementById('jump-graph'));
