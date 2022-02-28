@@ -4,9 +4,9 @@ const sio = io.connect('http://localhost:5000');
 
 //Setup local storage for each signal
 localStorage.setItem("airTime", JSON.stringify([]))
-localStorage.setItem("landingTime", JSON.stringify([]))
+localStorage.setItem("stiffness", JSON.stringify([]))
 localStorage.setItem("totalRot", JSON.stringify([]))
-localStorage.setItem("jumpMid", JSON.stringify([]))
+localStorage.setItem("peakRotSpeed", JSON.stringify([]))
 localStorage.setItem("toeHeavy", JSON.stringify([]))
 
 var performanceDivWidth = document.getElementsByClassName('performance-box')[0].offsetWidth;
@@ -24,9 +24,9 @@ var dbDate = {
 //Used to map the selected chart type from front-end menu to the local storage signals
 const CATEGORIESchart = {
   'Air Time': 'airTime',
-  'Landing Time': 'landingTime',
-  'Rotation': 'totalRot',
-  'Peak Rotation': 'jumpMid',
+  'Stiffness': 'stiffness',
+  'Total Rotation': 'totalRot',
+  'Peak Rotational Speed': 'peakRotSpeed',
   'Toe Heavy': 'toeHeavy'
 };
 
@@ -34,7 +34,7 @@ const CATEGORIESchart = {
  var testAirTime = [[1, 10],[2, 12]];
  localStorage.setItem("airTime", JSON.stringify(testAirTime))
  var testLandTime = [[1, 3],[2, 1]];
- localStorage.setItem("landingTime", JSON.stringify(testLandTime))
+ localStorage.setItem("stiffness", JSON.stringify(testLandTime))
 
 //Websocket events
 sio.on('connect',function() {
@@ -58,19 +58,19 @@ sio.on('getData',function() {
 sio.on('setData',function(data) {
   console.log('Received a message from the server!', data);
   var storedSignals1 = JSON.parse(localStorage.getItem("airTime"))
-  var storedSignals2 = JSON.parse(localStorage.getItem("landingTime"))
+  var storedSignals2 = JSON.parse(localStorage.getItem("stiffness"))
   var storedSignals3 = JSON.parse(localStorage.getItem("totalRot"))
-  var storedSignals4 = JSON.parse(localStorage.getItem("jumpMid"))
+  var storedSignals4 = JSON.parse(localStorage.getItem("peakRotSpeed"))
   var storedSignals5 = JSON.parse(localStorage.getItem("toeHeavy"))
   storedSignals1.push([storedSignals1.length(), data.air_time])
-  storedSignals2.push(data.ladning_time)
-  storedSignals3.push(data.total_rotation)
-  storedSignals4.push(data.jump_midpoint)
-  storedSignals5.push(data.isToeHeavy)
+  storedSignals2.push([storedSignals1.length(), data.landing_time])
+  storedSignals3.push([storedSignals1.length(), data.total_rotation])
+  storedSignals4.push([storedSignals1.length(), data.jump_midpoint])
+  storedSignals5.push([storedSignals1.length(), data.isToeHeavy])
   localStorage.setItem("airTime", JSON.stringify(storedSignals1))
-  localStorage.setItem("landingTime", JSON.stringify(storedSignals2))
+  localStorage.setItem("stiffness", JSON.stringify(storedSignals2))
   localStorage.setItem("totalRot", JSON.stringify(storedSignals3))
-  localStorage.setItem("jumpMid", JSON.stringify(storedSignals4))
+  localStorage.setItem("peakRotSpeed", JSON.stringify(storedSignals4))
   localStorage.setItem("toeHeavy", JSON.stringify(storedSignals5))
   
   //Clear previous chart and draw the new one
@@ -92,11 +92,11 @@ chartTypeMenu.addEventListener('blur', () => setTimeout(() => {
 //Process data from database
 sio.on('databaseReturn', function(data){
   localStorage.clear();
-  localStorage.setItem("airTime", JSON.stringify(data.ladning_time))
-  localStorage.setItem("landingTime", JSON.stringify(storedSignals2))
-  localStorage.setItem("totalRot", JSON.stringify(storedSignals3))
-  localStorage.setItem("jumpMid", JSON.stringify(storedSignals4))
-  localStorage.setItem("toeHeavy", JSON.stringify(storedSignals5))
+  localStorage.setItem("airTime", JSON.stringify(data.air_time_list))
+  localStorage.setItem("stiffness", JSON.stringify(data.landing_time_list))
+  localStorage.setItem("totalRot", JSON.stringify(data.total_rotation_list))
+  localStorage.setItem("peakRotSpeed", JSON.stringify(data.peak_rotation_list))
+  localStorage.setItem("toeHeavy", JSON.stringify(data.toe_heavy_list))
   
   //Clear previous chart and draw the new one
   document.getElementById('jump-graph').innerHTML = "";
