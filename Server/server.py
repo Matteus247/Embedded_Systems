@@ -23,7 +23,7 @@ from datetime import datetime
 ############################################################
 
 
-
+# Initialiase the database
 def database_init():
     ### INITIALISE A NEW TABLE WITH THE FOLLOWING ATTRIBUTES ###
     connection = db.connect("skating_data.db")
@@ -38,7 +38,7 @@ def database_init():
                                                 peak_rotation FLOAT,
                                                 toe_heavy BOOL) """)
 
-
+# Store the given data in the databse
 def database_write(air_time, landing_time, total_rotation, peak_rotation, toe_heavy):
     connection = db.connect("skating_data.db")
     cursor = connection.cursor()
@@ -55,7 +55,7 @@ def database_write(air_time, landing_time, total_rotation, peak_rotation, toe_he
     ### SAVE DATABASE STATE ###
     connection.commit()
 
-
+# Get the relevant data between the two timestamps
 def database_read(start_date, end_date):
     air_time_list = []
     landing_time_list = []
@@ -91,6 +91,7 @@ def database_read(start_date, end_date):
 #               START OF SIGNAL PROCESSING                 #
 ############################################################
 
+# Create a 1D gaussian filter
 def gaussian_filter_1d(sigma):
     # sigma: the parameter sigma in the Gaussian kernel (unit: pixel)
     #
@@ -102,6 +103,7 @@ def gaussian_filter_1d(sigma):
         h[i] = math.exp(-(x**2) / (2 * sigma * sigma)) / (np.sqrt(2 * np.pi) * sigma)
     return h
 
+# Takes a starting index and returns a tuple containing the peak value, the time of the peak value and the index of the value AFTER the starting index.
 def findPeakValue(arr_data, starting_index, arr_time):
     peak_value = 0.0
     peak_value_time = 0
@@ -113,7 +115,8 @@ def findPeakValue(arr_data, starting_index, arr_time):
             peak_value_time = arr_time[starting_index + i]
             index = starting_index + i
     return (peak_value, peak_value_time, index)
-# 1 2 3 4 5 6 
+
+# Takes a starting index and returns a tuple containing the through value, the time of the through value and the index of the value BEFORE the starting index.
 def findTroughValue(arr_data, starting_index, arr_time):
     trough_value = 0.0
     trough_value_time = 0
@@ -126,6 +129,7 @@ def findTroughValue(arr_data, starting_index, arr_time):
             index = starting_index - i
     return (trough_value, trough_value_time, index)
 
+# Performs a binary search and returns the indices of the two closest elements
 def binarySearch(data, val):
     highIndex = len(data)-1
     lowIndex = 0
@@ -149,6 +153,7 @@ def binarySearch(data, val):
                     lowIndex = index
     return sorted([highIndex, lowIndex])
 
+# Does a linear search for the closest element to a target value
 def searchClosest(data, val):
     current_closest = (0, 0)
     for i in range(len(data) - 1):
@@ -158,6 +163,7 @@ def searchClosest(data, val):
 
     return current_closest
 
+# Does a linear search for the closest element to a target value starting from a given time
 def searchClosestWithTime(data, val, times, startFrom):
     current_closest = (0, 0)
 
@@ -172,16 +178,19 @@ def searchClosestWithTime(data, val, times, startFrom):
 
     return current_closest
 
+# Given the time return the value at that given time
 def findValueByTime(time, arr_data, arr_time):
     index1, index2 = binarySearch(arr_time, time)
     value = (arr_data[index1] + arr_data[index2]) / 2
 
     return value
 
+# Given the time return the index of that given time
 def findIndexByTime(time, arr_time):
     index1, index2 = binarySearch(arr_time, time)
     return max(index1, index2)
 
+# Given the value return the first time that has the closest value
 def findTimeByValue(value, arr_data, arr_time, startFrom):
     index1, index2 = searchClosestWithTime(arr_data, value, arr_time, startFrom)
     print(arr_time[index1], arr_time[index2])
@@ -189,6 +198,7 @@ def findTimeByValue(value, arr_data, arr_time, startFrom):
 
     return value
 
+# Given the index of the peak value find the start and the end of the event
 def findRotationInterval(arr, peakIndex):
     startIndex = 0
     endIndex = 0
@@ -203,6 +213,7 @@ def findRotationInterval(arr, peakIndex):
             break
     return (startIndex, endIndex)
 
+# processes the 6 given signals and return the air time, landing stiffness, the total rotation in degrees, the peak angular velocity and whether the signal is toe or heel heavy
 def signalProcessing(d_toe, t_toe, d, t, spin_data, spin_time):
     d_toe.reverse()
     t_toe.reverse()
@@ -210,8 +221,6 @@ def signalProcessing(d_toe, t_toe, d, t, spin_data, spin_time):
     d.reverse()
     spin_data.reverse()
     spin_time.reverse()
-
-    print(len(spin_data))
 
     difference_kernel = [1, 0, -1]
     gaussian = gaussian_filter_1d(11)
@@ -234,7 +243,6 @@ def signalProcessing(d_toe, t_toe, d, t, spin_data, spin_time):
 
     intervalStart, intervalEnd = findRotationInterval(spin_data, jump_midpoint_index)
 
-    print(len(spin_data[intervalStart:intervalEnd]), len(spin_time[intervalStart:intervalEnd]))
     total_rotation = integrate.cumtrapz(spin_data[intervalStart:intervalEnd], spin_time[intervalStart:intervalEnd])[-1]
     print("Total rotation: ", total_rotation)
     print("Jump Mid-point: ", jump_midpoint_time, " ", jump_midpoint )
@@ -250,15 +258,14 @@ def signalProcessing(d_toe, t_toe, d, t, spin_data, spin_time):
 
     landing_peak_value, a, peak_index = findPeakValue(gaussian_smoothed_signal, findIndexByTime(jump_midpoint_time, gaussian_t), gaussian_t)
 
-    # TODO: ONLY SEARCH SOME TO SOME INDEX BEFORE AND AFTER
     takeoff_peak_value, _, takeoff_peak_index = findPeakValue(d_toe[:findIndexByTime(jump_midpoint_time, gaussian_t)], 0, t_toe)
     landToe_peak_value, _, landToe_peak_index = findPeakValue(d_toe, findIndexByTime(jump_midpoint_time, gaussian_t), t_toe)
+    
     print("TOE: ", takeoff_peak_value, " ", landToe_peak_value)
+    
     isToeHeavy = True if takeoff_peak_value <= landToe_peak_value else False
 
     finished_landing_point = landing_peak_value * 0.4
-    print("Started landing value: ", landing_peak_value)
-    print("Finished landing value: ", finished_landing_point)
 
     # Find the threshold value which represents the end of the landing
     index = 0
@@ -267,7 +274,6 @@ def signalProcessing(d_toe, t_toe, d, t, spin_data, spin_time):
             break
         index += 1
 
-    print(gaussian_smoothed_signal[peak_index + index -1])
     print("Started landing time: ", gaussian_t[peak_index])
     air_time = highest_derivative_time - lowest_derivative_time
     print("Air time: ", air_time)
@@ -280,10 +286,11 @@ def signalProcessing(d_toe, t_toe, d, t, spin_data, spin_time):
 
 
 
-############################################################
-#               START OF SIGNAL PROCESSING                 #
-############################################################
+##########################################################
+#               END OF SIGNAL PROCESSING                 #
+##########################################################
 
+# The mqtt stores the messages in this queue and the socket connection gets the first message in the queue and sends it to the front-end or request
 messageQueue = []
 
 sio = socketio.Server(cors_allowed_origins='*')
@@ -304,13 +311,15 @@ def message(sid, data):
 def disconnect(sid):
     print('disconnect ', sid)
 
+# Event to handle sending data of the current event
 @sio.on('getData')
 def getData(sid, data):
     print('message ', messageQueue)
     while len(messageQueue) > 0:
         print(type(messageQueue))
         sio.emit('setData', messageQueue.pop(0))
-        
+
+# Event to handle retrieving data of the database
 @sio.on('dbQuery')
 def dbQuery(sid, data):
     print(data)
@@ -328,23 +337,14 @@ def dbQuery(sid, data):
 #               START OF MQTT SET UP                 #
 ######################################################
 def on_message(client, userdata, message) :
-    #print(message)
-    #print(type(message))
     msg_decoced = str(message.payload.decode("utf-8", "ignore"))
     data = json.loads(msg_decoced)
-    print(len(data["toe_data"]), len(data["toe_time"]), len(data["heel_data"]), len(data["heel_time"]), len(data["spin_data"]), len(data["spin_time"]))
-    processedData = signalProcessing(data["toe_data"], data["toe_time"], data["heel_data"], data["heel_time"], data["spin_data"], data["spin_time"])
 
-    # m_in=json.loads(msg_decoced)
-    # print(m_in)
-    #print("Received message:{} on topic{}".format(message.payload, message.topic))
-    #print(msg_decoced)
-    #print("TYPE: ", type(msg_decoced))
+    processedData = signalProcessing(data["toe_data"], data["toe_time"], data["heel_data"], data["heel_time"], data["spin_data"], data["spin_time"])
 
     messageQueue.append(processedData)
 
     database_write(processedData["air_time"], processedData["landing_time"], processedData["total_rotation"], processedData["jump_midpoint"], processedData["isToeHeavy"])
-    print(len(messageQueue))
 
 def on_disconnect(client, userdata,rc=0):
     client.loop_stop()
@@ -397,5 +397,4 @@ if __name__ == '__main__':
 
 
 
-### NOT SURE ATM HOW ESSENTIAL THIS IS, FURTHER READING NEEDED ###
 connection.close()
