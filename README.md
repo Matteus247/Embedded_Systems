@@ -6,6 +6,8 @@ Axel-erated Skating
 
 *Developed by: Alexander Limonov, Matei Tanase, Miles Grist, Nikolay Miladinov* 
 
+*MARKETING WEBSITE: pull the front-end folder and run the HomeMarketing HTML file*
+
 Figure skaters are exposed to large forces when spinning and landing jumps.
 This device aims to provide methods for fast quantitative and qualitative feedback to athletes, when training specific
 skating skills; "Axel-erated" progression and monitoring of physical health can be achieved.

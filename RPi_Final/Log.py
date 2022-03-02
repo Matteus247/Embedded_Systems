@@ -10,12 +10,12 @@ class Log:
         self.buffers = [[[], []], [[], []], [[], []]]  # data for each sensor [[[data, ...],[time, ...]], ...]
 
         for buffer in range(len(self.buffers)):
-            for i in range(self.buffer_length):  #
+            for i in range(self.buffer_length):  # Populate with 0
                 self.buffers[buffer][0].append(0)
                 self.buffers[buffer][1].append(0)
 
-        self.buffer_i = [0, 0, 0]
-        self.events = []
+        self.buffer_i = [0, 0, 0] # Index of end of buffer
+        self.events = [] # Array of saved sets of buffer data
         self.event_i = 0  # Index of next event to be sent via MQTT
         self.sig_offsets = [1800, 1800]  # Removes DC offset read at the ADC
         self.sig_cal = [0, 0]  # Based upon the user's resting, balanced weight
@@ -24,13 +24,15 @@ class Log:
         self.t_previous = time.perf_counter()
         self.t_cumulative = 0
 
-    def i_wrap(self, i):
+    # Returns index to write to in the buffer
+    def i_wrap(self, i): 
         if i < (self.buffer_length - 1):
             return i + 1
         else:
             return 0
 
-    def i_convert(self, i_relative, i_current):  # Maps relative index to current index in a buffer
+    # Maps relative index to current index in a buffer
+    def i_convert(self, i_relative, i_current):  
         i = i_current + i_relative
         if i > self.buffer_length - 1:
             return i - self.buffer_length
@@ -39,13 +41,15 @@ class Log:
         else:
             return i
 
-    def lpf(self, sig_id, index, width):  # Time averaging of defined width, at a single index
+    # Time averaging of defined width, at a single index
+    def lpf(self, sig_id, index, width):  
         d_sum = 0
         for c in range(width):
             d_sum += self.buffers[sig_id][0][self.i_convert(index + c - width + 1, self.buffer_i[sig_id])]
         return d_sum / width
 
-    def lpf_buffer(self, sig_id, width):  # Time averaging of defined width, entire buffer
+    # Time averaging of defined width, applied to the entire buffer
+    def lpf_buffer(self, sig_id, width):  
         filtered_buffer = [[], []]
         for i in range(self.buffer_length):
             adjusted_width = width  # stop filter wrapping start and end of signal
@@ -55,7 +59,8 @@ class Log:
             filtered_buffer[1].append(self.buffers[sig_id][1][self.i_convert(-i, self.buffer_i[sig_id] - 1)])
         return filtered_buffer  # new buffer, arranged in reverse time order
 
-    def write(self, sig_id, d):  # Write a datapoint into a buffer and timestamp it
+    # Write a datapoint into a buffer and timestamp it
+    def write(self, sig_id, d):  
         self.buffers[sig_id][0][self.buffer_i[sig_id]] = d
 
         t = time.perf_counter()
@@ -65,6 +70,7 @@ class Log:
         self.buffers[sig_id][1][self.buffer_i[sig_id]] = time.time()
         self.buffer_i[sig_id] = self.i_wrap(self.buffer_i[sig_id])  # Increment buffer index
 
+    # Save the current buffer data into the events array
     def save_event(self):  # Formats the raw sensor data lpf -> offset -> calibration -> adjust timestamps to start at 0
         print("saving event")
         a0 = self.lpf_buffer(0, 10)

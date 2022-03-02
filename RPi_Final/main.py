@@ -13,6 +13,7 @@ broker_ip = "146.169.153.141"
 
 log = Log()
 
+# Create sensor objects
 gyro0 = Gyro()
 adc0 = FsrAdc(0x48, 10)
 adc1 = FsrAdc(0x49, 17)
@@ -23,12 +24,13 @@ cal_button = Button(27)
 red_led = LED(23)
 green_led = LED(22)
 
+# Setup MQTT connection
 def on_disconnect(client, userdata, rc=0):
     client.loop_stop()
 
 client = mqtt.Client()
 print("created client")
-print(client.connect("146.169.153.141", port=1883))
+print(client.connect(broker_ip, port=1883))
 client.subscribe("IC.embedded/GROUP_NAME/#")
 client.loop_start()
 client.on_disconnect = on_disconnect
@@ -53,7 +55,7 @@ def readGyro():
 def eventLogging():
     red_led.on()
     green_led.off()
-    cal_button.wait_for_active()
+    cal_button.wait_for_active() # Wait for button press to start calibration
     red_led.blink(0.1, 0.1)
     time.sleep(0.2)  # Do calibration here
 
@@ -71,18 +73,17 @@ def eventLogging():
         fsr_1 = fsr_1pp
     log.sig_cal[0] = fsr_0 - log.sig_offsets[0]
     log.sig_cal[1] = fsr_1 - log.sig_offsets[1]
-    print("Cals: ", fsr_0, " ", fsr_1)
+    print("Cals: ", fsr_0, " ", fsr_1) # Set ADC calibration values
     red_led.off()
 
     save_event = False
     while True:
         if save_event:
             green_led.on()
-            log.save_event()
+            log.save_event() # Save buffer data into an array of events for access
             print("writing event")
 
             # Create and send JSON object
-
             MQTT_dict = {
                 "eventID": (log.event_i-1),
                 "heel_data": log.events[log.event_i-1][0][0],
@@ -98,36 +99,6 @@ def eventLogging():
             MSG_INFO = client.publish("IC.embedded/GROUP_NAME/test", json_obj)
             print(mqtt.error_string(MSG_INFO.rc))
 
-            # Output adc0 data (heel sensor)
-            # with open('e%s_heel_d.txt' %log.event_i, 'w') as f:
-            #     print("first file opened")
-            #     for i in range(2500):
-            #         f.write(str(log.events[log.event_i-1][0][0][i]))
-            #         f.write('\n')
-            # with open('e%s_heel_t.txt' %log.event_i, 'w') as f:
-            #     for i in range(2500):
-            #         f.write(str(log.events[log.event_i-1][0][1][i]))
-            #         f.write('\n')
-            #
-            # # Output adc1 data (toe sensor)
-            # with open('e%s_toe_d.txt' %log.event_i, 'w') as f:
-            #     for i in range(2500):
-            #         f.write(str(log.events[log.event_i-1][1][0][i]))
-            #         f.write('\n')
-            # with open('e%s_toe_t.txt' %log.event_i, 'w') as f:
-            #     for i in range(2500):
-            #         f.write(str(log.events[log.event_i-1][1][1][i]))
-            #         f.write('\n')
-            #
-            # # Output gyro0 data (spin/rotation)
-            # with open('e%s_spin_d.txt' %log.event_i, 'w') as f:
-            #     for i in range(2500):
-            #         f.write(str(log.events[log.event_i-1][2][0][i]))
-            #         f.write('\n')
-            # with open('e%s_spin_t.txt' %log.event_i, 'w') as f:
-            #     for i in range(2500):
-            #         f.write(str(log.events[log.event_i-1][2][1][i]))
-            #         f.write('\n')
             print("done writing")
 
             save_event = False

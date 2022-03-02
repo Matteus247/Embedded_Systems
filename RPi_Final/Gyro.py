@@ -34,10 +34,6 @@ class Gyro:
         with smbus2.SMBus(1) as bus:
 
             ### REGISTER SETUP ###
-            #bus.write_byte_data(self.SLAVE_REG, self.CTRL_REG1, 0x00) #set register to standby
-            time.sleep(0.1)
-            #bus.write_byte_data(Gyro.SLAVE_REG, Gyro.CTRL_REG1, 0x40) #reset the register content
-            #time.sleep(0.1)
             bus.write_byte_data(self.SLAVE_REG, self.CTRL_REG0, 0x00) #reg sensitivity: 0x00 (2000dps) -> 0x02 (500dps)
             time.sleep(0.1)
             bus.write_byte_data(self.SLAVE_REG, self.CTRL_REG1, 0x0E) #set register to active
@@ -82,15 +78,6 @@ class Gyro:
 
     def getResultantSpeed (self):
         return round(math.sqrt(round(self.x, 3) ** 2 + round(self.y, 3) ** 2 + round(self.z, 3) ** 2), 3)
-    
-    
-    '''
-    def clearRegister (self):
-        with smbus2.SMBus(1) as bus:
-            #Remote I/O error when addressing this register
-            bus.write_byte_data(self.SLAVE_REG, self.CTRL_REG1, 0x40) #reset the register content
-            time.sleep(0.1)
-    '''
     
     
     def setSensitivity(self, _sensitivity):
