@@ -41,16 +41,16 @@ See below for circuit and system diagrams.
 
 ### System level diagram
 
-![alt text](sys_diagram.png "System level diagram")
+![alt text](Images/sys_diagram.png "System level diagram")
 
 ---
 
 ### Analogue circuit for force sensor interface
 
-![alt text](circuit.png "Analogue circuit for force sensor interface")
+![alt text](Images/circuit.png "Analogue circuit for force sensor interface")
 
 ---
 
 ### Concept of final hardware
 
-![alt text](product_concept.jpeg "Concept of final hardware")
+![alt text](Images/product_concept.jpeg "Concept of final hardware")
