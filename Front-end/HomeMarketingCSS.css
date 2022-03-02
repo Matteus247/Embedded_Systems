@@ -45,12 +45,17 @@ body{
     margin-left: -10px;
     margin-bottom: -8px;
     transform: skew(-7deg);
+    margin-top: 0px;
 }
 
 .signIn{
     display: flex;
     flex-direction: row;
     align-items: center;
+}
+
+.signInLink{
+    text-decoration: none;
 }
 
 .signIn p{
@@ -87,11 +92,13 @@ body{
     margin-left: 6.25%;
     width: 40%;
     line-height: 1.05em;
-    margin-bottom: clamp(40px, 2.86vw, 65px);
+    margin-bottom: clamp(50px, 2.86vw, 65px);
 }
 
 .joinLink{
     text-decoration: none;
+    padding: 10px clamp(45px, 3.1vw, 70px);
+    color: #222222;
 }
 
 .buttonJoin{
@@ -100,10 +107,9 @@ body{
     font-weight: 500;
     font-style: italic;
     text-transform: uppercase;
-    color: #222222;
-    margin-left: 6.25%;
     border-radius: 40px;
-    padding: 10px clamp(45px, 3.1vw, 70px);
+    padding: 10px 0px;
+    margin-left: 6.25%;
     background-color: #FABD9E;
     display: inline;
 }
@@ -196,14 +202,14 @@ body{
     display: flex;
     align-items: center;
     margin-bottom: 25px;
-    font-family: 'Rubik', sans-serif;
-    font-weight: normal;
-    font-size: clamp(24px, 1.67vw, 36px);
-    color: #222222;
 }
 
 .tickReason p{
     margin: 0px;
+    font-family: 'Rubik', sans-serif;
+    font-weight: normal;
+    font-size: clamp(24px, 1.67vw, 36px);
+    color: #222222;
 }
 
 .tickReason svg{
@@ -278,7 +284,7 @@ body{
     font-weight: 500;
     font-style: italic;
     color: #F78953;
-    margin: 0px 0px 90px 0px;
+    margin: 0px 0px clamp(80px, 4.7vw, 105px) 0px;
     text-align: center;
 }
 
@@ -382,7 +388,7 @@ body{
     font-weight: 500;
     font-style: italic;
     color: #222222;
-    margin: clamp(120px, 9.4vw, 210px) 0px clamp(70px, 4.7vw, 110   px) 0px;
+    margin: clamp(120px, 9.4vw, 210px) 0px clamp(70px, 4.7vw, 110px) 0px;
     text-align: center;
 }
 
@@ -392,8 +398,110 @@ body{
     font-weight: 500;
     font-style: italic;
     color: #222222;
-    margin: clamp(120px, 9.4vw, 210px) 0px clamp(70px, 4.7vw, 110   px) 0px;
+    margin: clamp(120px, 9.4vw, 210px) 0px clamp(70px, 4.7vw, 110px) 0px;
     text-align: center;
+}
+
+.pricing{
+    display: flex;
+    flex-direction: column;
+}
+
+.priceCats{
+    width: 75%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+}
+
+.middleCat{
+    margin: 0px clamp(45px, 3.1vw, 75px);
+    background-color: #FABD9E;
+    border-radius: 15px;
+    width: clamp(280px, 20.3vw, 420px);
+    padding-left: clamp(25px, 2.86vw, 65px);
+    padding-right: clamp(25px, 2.86vw, 65px);
+}
+
+.priceCat{
+    background-color: #FCE6DB;
+    border-radius: 15px;
+    width: clamp(280px, 18.2vw, 380px);
+    padding-left: clamp(25px, 2.6vw, 60px);
+    padding-right: clamp(25px, 2.6vw, 60px);
+}
+
+.middleCat h3{
+    font-family: 'Rubik', sans-serif;
+    font-size: clamp(24px, 1.9vw, 40px);
+    font-weight: 500;
+    font-style: italic;
+    color: #222222;
+    margin: clamp(30px, 2.1vw, 45px) 0px clamp(25px, 1.8vw, 40px) 0px;
+    text-align: center;
+}
+.priceCat h3{
+    font-family: 'Rubik', sans-serif;
+    font-size: clamp(24px, 1.56vw, 33px);
+    font-weight: 500;
+    font-style: italic;
+    color: #222222;
+    margin: clamp(30px, 2.1vw, 45px) 0px 25px 0px;
+    text-align: center;
+}
+.priceCat ul, .middleCat ul{
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+.priceCat ul li{
+    font-family: 'Rubik', sans-serif;
+    font-size: clamp(18px, 1.04vw, 21px);
+    font-weight: 300;
+    color: #222222;
+}
+.middleCat ul li{
+    font-family: 'Rubik', sans-serif;
+    font-size: clamp(18px, 1.14vw, 24px);
+    font-weight: 300;
+    color: #222222;
+}
+.priceCat ul li.boldLi, .middleCat ul li.boldLi{
+    font-weight: normal;
+}
+.priceCat h3.price{
+    margin-top: 30px;
+}
+.priceCat p{
+    font-family: 'Rubik', sans-serif;
+    font-size: clamp(18px, 1.04vw, 21px);
+    font-weight: normal;
+    color: #222222;
+    margin: 0px;
+}
+.middleCat p{
+    font-family: 'Rubik', sans-serif;
+    font-size: clamp(18px, 1.14vw, 24px);
+    font-weight: normal;
+    color: #222222;
+    margin: 0px;
+}
+
+.buttonBuy{
+    font-family: 'Rubik', sans-serif;
+    font-size: clamp(26px, 1.67vw, 36px);
+    font-weight: 500;
+    font-style: italic;
+    text-transform: uppercase;
+    margin: clamp(70px, 5.2vw, 110px) auto clamp(110px, 6.25vw, 135px) auto;
+    border-radius: 40px;
+    padding: 10px 0px;
+    background-color: #2363C3;
+}
+.buttonBuyLink{
+    text-decoration: none;
+    color: #FAFCFE;
+    padding: 10px clamp(45px, 3.1vw, 70px);
 }
 
 .footer{
@@ -409,6 +517,10 @@ body{
     margin: 25px auto;
     display: flex;
     align-items: flex-end;
+}
+.logoFooter img{
+    width: clamp(55px, 5.2vw, 120px);
+    height: clamp(50px, 4.7vw, 108px);
 }
 
 .logoFooter p{
@@ -430,4 +542,165 @@ body{
     color: #FAFCFE;
     margin: 0px 0px 50px 0px;
     text-align: center;
+}
+
+
+
+@media only screen and (max-width: 980px){
+	.compSkates{
+        width: 85%;
+    }
+    .heroTitle{
+        width: 70%;
+    }
+    .heroDesc{
+        width: 60%  ;
+    }
+    .logo p{
+        margin-bottom: -4px;
+    }
+    .sec2{
+        flex-direction: column;
+    }
+    .sec2title{
+        width: 80%;
+        text-align: center;
+        margin: 0px auto 100px auto;
+    }
+    .sec2 img{
+        margin-top: clamp(75px, 11.7vw, 115px);
+        width: 80%;
+    }
+    .testimonial.gray{
+        display: none;
+    }
+    .testimonials{
+        justify-content: center;
+    }
+    .testimonial.blue{
+        width: 70%;
+    }
+    .steps{
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    .step{
+        width: 50%;
+        margin-bottom: 70px;
+    }
+    .steps .step:last-child{
+        margin-bottom: 0px;
+    }
+    .sec5row{
+        flex-direction: column;
+        align-items: center;
+    }
+    .sec5col1,.sec5col3{
+        display: flex;
+        justify-content: space-between;
+    }
+    .sec5feature.firstFeature, .sec5col3 .sec5feature:first-child{
+        position: static;
+        margin-right: 60px;
+    }
+    .productSec5{
+        width: 70%;
+        margin-bottom: 60px;
+    }
+    .priceCats{
+        flex-direction: column;
+    }
+    .priceCat:first-child{
+        order: 2;
+        margin-bottom: 70px;
+    }
+    .priceCat:last-child{
+        order: 3;
+    }
+    .middleCat{
+        margin-bottom: 70px;
+    }
+    .middleCat, .priceCat{
+        margin-left: 0px;
+        margin-right: 0px;
+    }
+}
+
+@media only screen and (max-width: 700px){
+	.compSkates{
+        flex-direction: column;
+        align-items: center;
+    }
+    .titleComp{
+        margin-bottom: 70px;
+    }
+    .skateImgSmall{
+        margin-bottom: 60px;
+    }
+    .skateImgBig{
+        margin-bottom: 60px;
+    }
+    .cSkate p{
+        margin-bottom: 0px;
+    }
+    .menu{
+        padding-top: 20px;
+        width: 85%;
+    }
+    .logo p{
+        display: none;
+    }
+    .heroTitle{
+        width: auto;
+        margin-left: 30px;
+        margin-top: 33vh;
+    }
+    .heroDesc{
+        width: 80%;
+        margin-left: 30px;
+    }
+    .sec2{
+        width: 87%;
+    }
+    .sec2title{
+        width: 90%;
+    }
+    .testimonials{
+        width: 87%;
+    }
+    .testimonial.blue{
+        width: 100%;
+    }
+    .steps{
+        width: 82%;
+    }
+    .step{
+        width: 100%;
+    }
+    .sec5col1,.sec5col3{
+        flex-direction: column;
+    }
+    .sec5feature.firstFeature, .sec5col3 .sec5feature:first-child{
+        margin-right: 0px;
+    }
+    .productSec5{
+        display: none;
+    }
+    .sec5col1 .sec5feature:last-child{
+        margin-bottom: 80px;
+    }
+    .sec5 h2{
+        width: 90%;
+    }
+    .videoTitle{
+        width: 85%;
+        margin: 120px auto 70px auto;
+    }
+    .middleCat, .priceCat{
+        width: auto;
+    }
+    .priceCats{
+        width: 80%;
+    }
 }
