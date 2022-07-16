@@ -4,7 +4,7 @@ Axel-erated Skating
 
 ---
 
-*Developed by: Alexander Limonov, Matei Tanase, Miles Grist, Nikolay Miladinov* 
+*Developed by: Alexander Limonov, Matei Tanase, Miles Grist, Nikolay Miladinov. All rights reserved.* 
 
 *MARKETING WEBSITE: pull the front-end folder and run the HomeMarketing HTML file*
 
